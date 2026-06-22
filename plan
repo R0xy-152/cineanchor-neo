@@ -1,0 +1,390 @@
+# CineAnchor Neo Spike 技术验证计划
+
+## 摘要
+
+目标是在 GitHub 仓库 `R0xy-152/cineanchor-neo` 中进入 Spike 技术验证阶段，先验证最危险链路，而不是提前搭完整产品骨架。
+
+本阶段只落地最小工程资产：
+
+- 根目录创建 `AGENTS.md`，作为所有 AI Agent 的工作规范。
+- 创建轻量 Spike 目录和记录文件，不搭正式 MVP 架构。
+- 用 14 天完成验证路线 0-4，并输出 `spike_results.md`。
+- Spike 成功后，再锁定 API、Schema、数据库和正式目录结构。
+
+
+## AGENTS.md 内容
+
+在仓库根目录创建 `AGENTS.md`，只使用这个文件名，不创建 `AGENT.md`。
+
+```md
+# CineAnchor Neo Agent Guide
+
+## Project Stage
+
+CineAnchor Neo is currently in the Spike validation stage.
+
+The goal of Spike is to answer whether the technical chain can work, not to build the production application. Spike code may be temporary and disposable.
+
+Do not build the full product architecture before the Spike conclusions are recorded.
+
+## Product Positioning
+
+CineAnchor helps mobile game and indie game operators generate 8-15 second promotional videos from either:
+
+- one transparent PNG character image, or
+- one GLB model,
+- plus title copy and optional BGM.
+
+The MVP target output is a 1080p MP4 that looks like a game promotion clip, not a PPT-style screenshot.
+
+## Non-Goals Before V1.0
+
+Do not implement:
+
+- cloud rendering or SaaS deployment
+- account system
+- multiplayer collaboration
+- template marketplace
+- ecommerce batch generation
+- Unreal Engine backend
+- frame-by-frame AI video redraw
+- perfect WYSIWYG preview parity between Three.js and Blender
+- Celery + Redis queue
+
+## Branch Strategy
+
+| Branch | Rule |
+|---|---|
+| main | Stable only. No direct pushes. |
+| develop | Integration branch after Spike. |
+| spike/* | Spike validation branches. Disposable. Do not merge temporary code into main. |
+| feature/* | Product feature branches after Spike. |
+| docs/* | Documentation and portfolio material. |
+
+During Spike, use `spike/render-pipeline`, `spike/png-25d`, `spike/json-template`, `spike/comfyui`, and `spike/web-local-render` style branches.
+
+## Spike Rules
+
+Spike allows:
+
+- one-off scripts
+- temporary code
+- minimal tests or smoke checks
+- direct local scripts
+- hardcoded sample paths inside Spike-only folders when needed
+- minimal dependency use
+
+Spike forbids:
+
+- merging temporary code into main
+- designing the full product architecture early
+- adding large dependencies without recording why
+- implementing beyond the validation target
+- treating Spike success as production readiness
+- locking API contracts, database schema, or Project JSON schema before validation
+
+## Required Spike Evidence
+
+Every Spike route must record results in `spike_results.md`.
+
+Each entry must include:
+
+- goal question
+- commands run
+- input asset used
+- output artifact path
+- render duration
+- machine / GPU notes when relevant
+- pass / fail result
+- blocking errors
+- next decision
+
+## Validation Routes
+
+### Route 0: 3D Render Loop
+
+Question: Can Blender import a GLB, animate an orbit camera, render frames, and export MP4 through FFmpeg?
+
+Pass criteria:
+
+- Blender headless runs without errors
+- 192 frames are generated for 8 seconds at 24 fps
+- no black frames
+- FFmpeg creates playable MP4
+- total render time is recorded
+- if render time exceeds 10 minutes, rerun with Eevee
+
+Kill criterion:
+
+- If an 8-second video cannot be produced within 15 minutes, reassess Blender as the rendering backend.
+
+### Route 1: PNG 2.5D Video
+
+Question: Can a transparent PNG become a promotional-looking video instead of a static PPT-like clip?
+
+Pass criteria:
+
+- PNG alpha channel renders correctly
+- character stays in frame during camera motion
+- output MP4 is playable
+- 2 out of 3 non-developers agree it looks closer to a promotional clip than a PPT screenshot
+
+Kill criterion:
+
+- If the subject is severely distorted or visually unusable, reassess support for image-only users.
+
+### Route 2: JSON-Driven Template Rendering
+
+Question: Can one JSON file drive template, asset path, camera motion, duration, fps, aspect ratio, title, and subtitle?
+
+Use this minimal Project JSON only for Spike:
+
+```json
+{
+  "template": "character_intro",
+  "asset_type": "image",
+  "asset_path": "input/hero.png",
+  "camera_motion": "dolly_in",
+  "duration": 8,
+  "fps": 24,
+  "aspect_ratio": "9:16",
+  "title": "New Hero Arrival",
+  "subtitle": "Limited Event"
+}
+```
+
+Pass criteria:
+
+- changing `asset_path` switches input without code changes
+- changing `camera_motion` changes camera behavior
+- changing `aspect_ratio` changes output dimensions
+- three template names can be exercised: `character_intro`, `product_orbit`, `prop_showcase`
+
+### Route 3: ComfyUI AI Enhancement
+
+Question: Can ComfyUI improve Blender output without subject deformation or flicker?
+
+MVP strategy:
+
+- enhance keyframes only
+- apply color / contrast / sharpening style to full video through FFmpeg
+- do not use frame-by-frame AI redraw
+
+Pass criteria:
+
+- Python script calls ComfyUI API through `POST /prompt`
+- enhanced output is visibly better in side-by-side review
+- subject is not deformed
+- no obvious flicker
+- per-frame ComfyUI time is recorded
+- GPU memory conflict with Blender is recorded
+
+### Route 4: Web To Local Render Chain
+
+Question: Can a minimal web UI call FastAPI, trigger Blender, and return MP4?
+
+Pass criteria:
+
+- upload saves asset into local storage
+- backend generates Project JSON
+- backend calls Blender headless
+- status can move from pending to rendering to done
+- frontend can poll status
+- final MP4 download link works
+
+## Merge Rules After Spike
+
+A branch must not be merged if:
+
+- it changes files outside the assigned scope
+- it modifies API behavior without documentation
+- it modifies Project JSON structure without documentation
+- tests or smoke checks were not run
+- it deletes existing tests
+- it introduces unexplained dependencies
+- it hardcodes production absolute paths
+- it breaks the golden path after V0.1 exists
+
+## Change Report Format
+
+Every completed task must report:
+
+```md
+Changed:
+
+files_modified:
+- path/to/file
+
+behavior_changed:
+- summary
+
+api_changed: yes/no
+schema_changed: yes/no
+
+tests_added:
+- path/to/test
+
+commands_run:
+- command and result
+
+known_risks:
+- risk summary
+```
+```
+
+## Spike 实施规划
+
+### 0. 仓库与环境准备
+
+- 安装或修复本机 `git`，确保 PowerShell 可运行 `git --version`。
+- clone 仓库到本地工作区：`R0xy-152/cineanchor-neo`。
+- 在根目录添加 `AGENTS.md`。
+- 添加最小 Spike 结构：
+
+```text
+spikes/
+  render_glb/
+  png_25d/
+  json_template/
+  comfyui_enhance/
+  web_local_chain/
+spike_results.md
+README.md
+.gitignore
+```
+
+- `.gitignore` 至少忽略：
+
+```text
+storage/
+spikes/**/output/
+spikes/**/input/*.glb
+spikes/**/input/*.png
+*.mp4
+*.blend1
+__pycache__/
+.venv/
+```
+
+### 1. 第 1-2 天：Route 0，GLB 渲染闭环
+
+实现 `spikes/render_glb/render_orbit.py` 和 FFmpeg 合成脚本。
+
+验证：
+
+- Blender headless 导入 `input/model.glb`
+- 自动计算包围盒
+- 生成 8 秒、24fps、192 帧
+- 输出 `output/final.mp4`
+- 记录 Cycles 和 Eevee 的耗时对比
+
+结论写入 `spike_results.md`。
+
+### 2. 第 3-4 天：Route 1，PNG 2.5D 视频
+
+实现 `spikes/png_25d/render_png_scene.py`。
+
+验证：
+
+- 透明 PNG 贴到 Blender 平面 Mesh
+- 背景、灯光、粒子或简单景深增强画面
+- 摄像机 dolly in
+- FFmpeg 叠加标题文字
+- 3 人主观评审，至少 2 人认可
+
+结论写入 `spike_results.md`。
+
+### 3. 第 5-7 天：Route 2，JSON 模板渲染
+
+实现 `spikes/json_template/render_from_json.py` 和 3 个 JSON 示例。
+
+模板名固定为：
+
+- `character_intro`
+- `product_orbit`
+- `prop_showcase`
+
+支持字段固定为：
+
+- `template`
+- `asset_type`
+- `asset_path`
+- `camera_motion`
+- `duration`
+- `fps`
+- `aspect_ratio`
+- `title`
+- `subtitle`
+
+本阶段不设计正式 Schema，只验证 JSON 驱动可行性。
+
+### 4. 第 8-10 天：Route 3，ComfyUI 美化
+
+实现 `spikes/comfyui_enhance/enhance_keyframes.py`。
+
+验证：
+
+- FFmpeg 每秒抽 1 帧
+- Python 调 ComfyUI `POST /prompt`
+- 记录单帧耗时
+- 比较 Blender 原片和美化后版本
+- 测试 Blender 与 ComfyUI 串行执行是否稳定
+
+如果并行 OOM，记录结论：MVP 必须串行执行。
+
+### 5. 第 11-14 天：Route 4，Web 到本地渲染
+
+实现最小可用链路，不做正式产品架构。
+
+后端：
+
+- FastAPI 最小服务
+- `POST /render`
+- `GET /render/{task_id}/status`
+- `GET /render/{task_id}/download`
+- 本地串行任务队列
+
+前端：
+
+- 单页 HTML 或极简 React 页面
+- 上传素材
+- 选择模板
+- 输入标题
+- 点击生成
+- 轮询状态
+- 下载 MP4
+
+验收只看链路跑通，不追求 UI 完整度。
+
+## 测试与验收
+
+Spike 阶段以 smoke test 和产物验收为主。
+
+必须验证：
+
+- Blender headless 可执行
+- FFmpeg 可执行
+- GLB 能生成 MP4
+- PNG 能生成 MP4
+- JSON 改字段能改变输出
+- ComfyUI API 可调用
+- Web → FastAPI → Blender → MP4 链路可跑通
+- 每条路线都有耗时、失败点和结论记录
+
+Spike 总验收：
+
+- `AGENTS.md` 存在且内容完整
+- `spike_results.md` 包含 Route 0-4 的结论
+- 至少一个最终 MP4 可播放
+- 明确写出是否进入 V0.1
+- 若失败，明确写出 Kill 判据触发原因和替代方向
+
+## 假设与默认决策
+
+- 文件名采用 `AGENTS.md`，不创建 `AGENT.md`。
+- Spike 代码允许一次性、可丢弃。
+- Spike 不提前搭建正式 `apps/`、`server/`、`blender/`、`docs/ADR` 全量架构。
+- MVP 默认优先验证 PNG 2.5D 用户路径，因为目标用户大概率没有 GLB。
+- ComfyUI 只做关键帧美化和风格提取，不做逐帧 AI 重绘。
+- 若 Cycles 渲染过慢，MVP 默认切换 Eevee。
+- 若 Blender + ComfyUI 显存竞争明显，MVP 默认串行执行。

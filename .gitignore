@@ -1,0 +1,55 @@
+# Storage (runtime data, not in git)
+storage/
+
+# Spike outputs
+spikes/**/output/
+spikes/**/input/*.glb
+spikes/**/input/*.png
+spikes/**/input/*.jpg
+spikes/**/input/*.jpeg
+
+# Rendered video
+*.mp4
+*.mov
+*.avi
+
+# Blender backup files
+*.blend1
+*.blend2
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Database
+*.sqlite
+*.sqlite3
