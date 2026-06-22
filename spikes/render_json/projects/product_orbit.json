@@ -1,0 +1,22 @@
+{
+  "template": "product_orbit",
+  "asset": {
+    "type": "glb",
+    "path": "input/model.glb"
+  },
+  "camera": {
+    "motion": "orbit"
+  },
+  "duration": 4,
+  "fps": 12,
+  "output": {
+    "width": 1280,
+    "height": 720,
+    "frames_dir": "output/product_orbit/frames",
+    "video_path": "output/product_orbit/final.mp4"
+  },
+  "text": {
+    "title": "Product Orbit",
+    "subtitle": "GLB Showcase"
+  }
+}
