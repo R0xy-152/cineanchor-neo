@@ -1,8 +1,10 @@
 # Storage (runtime data, not in git)
 storage/
+.tools/
 
 # Spike outputs
 spikes/**/output/
+spikes/**/frames/
 spikes/**/input/*.glb
 spikes/**/input/*.png
 spikes/**/input/*.jpg
@@ -16,6 +18,7 @@ spikes/**/input/*.jpeg
 # Blender backup files
 *.blend1
 *.blend2
+optix7cache.db
 
 # Python
 __pycache__/
