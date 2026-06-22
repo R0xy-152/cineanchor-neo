@@ -33,3 +33,36 @@ Known risks:
 - `prop_showcase` is outside this task's current scope.
 - This Spike JSON is not the production schema.
 - Render inputs and outputs are local runtime artifacts and are intentionally ignored by Git.
+
+## Route 4: Web To Local Render Chain
+
+Status: PASS
+
+Goal question: Can a minimal web UI call FastAPI, trigger Blender JSON rendering, run FFmpeg composition, poll task status, and download the final MP4?
+
+Conclusion: PASS for the current Spike scope. A static local page calls a FastAPI app, which generates a Route 2 Project JSON, runs Blender Eevee headless, runs FFmpeg composition, exposes task status, and returns the MP4 through a download endpoint.
+
+| Field | Result |
+|---|---|
+| Commands run | Installed FastAPI/uvicorn into `.venv`; compiled `server/app.py` and `server/smoke_web_chain.py`; ran `server/smoke_web_chain.py`; ran ffprobe on both Web-generated MP4s. |
+| Input assets | `spikes/render_json/input/hero.png`, `spikes/render_json/input/model.glb` |
+| Output artifacts | `spikes/render_json/output/web/5e056af9c3294a8c8f91954e9a47b58f/final.mp4`, `spikes/render_json/output/web/73f8c80da1394e2bacb4cc4d3f0d4fc1/final.mp4` |
+| Render duration | character_intro: 51.68s; product_orbit: 20.95s |
+| FFmpeg duration | character_intro: 0.65s; product_orbit: 0.50s |
+| Machine / GPU notes | Blender 5.1.2, Eevee (`BLENDER_EEVEE`), FFmpeg 8.1.1 Gyan build. |
+| API endpoints | `POST /api/render`, `GET /api/render/{task_id}`, `GET /api/render/{task_id}/download` |
+| Status transitions | PASS: poll observed `RENDERING -> COMPOSITING -> DONE` for both templates. |
+| Download | PASS: API download returned MP4 bytes for both templates. |
+| Failure response | PASS: invalid template returned HTTP 400 with `error_code=UNSUPPORTED_TEMPLATE`. |
+| ffprobe | PASS: character output is h264 720x1280, 24fps, 4s, 96 frames; product output is h264 1280x720, 12fps, 4s, 48 frames. |
+| Pass / Fail | PASS |
+| Blocking errors | None for the web-to-render chain. Persistent background server launch from this Codex shell was unreliable; foreground uvicorn and in-process HTTP smoke validation worked. |
+| Next decision | Route 4 is viable as a Spike. Keep the task store in-memory until production queue requirements are validated. |
+
+Known risks:
+
+- In-memory task state is lost on server restart.
+- No queue, cancellation, concurrency policy, or database exists in this Spike.
+- Runtime sample assets and generated outputs are ignored by Git and must exist locally.
+- `BLENDER_PATH` and `FFMPEG_PATH` must be configured per machine.
+- The current Project JSON remains provisional Spike schema.

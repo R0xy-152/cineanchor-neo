@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CineAnchor Local Render</title>
+    <link rel="stylesheet" href="/web/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel">
+        <div class="header">
+          <div>
+            <p class="eyebrow">Local Spike</p>
+            <h1>CineAnchor Render Chain</h1>
+          </div>
+          <span id="statusBadge" class="badge">IDLE</span>
+        </div>
+
+        <form id="renderForm" class="form">
+          <label>
+            <span>Template</span>
+            <select id="template" name="template">
+              <option value="character_intro">character_intro</option>
+              <option value="product_orbit">product_orbit</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Title</span>
+            <input id="title" name="title" value="New Hero Arrival" maxlength="80" />
+          </label>
+
+          <label>
+            <span>Subtitle</span>
+            <input id="subtitle" name="subtitle" value="Limited Event" maxlength="120" />
+          </label>
+
+          <button id="generateButton" type="submit">Generate</button>
+        </form>
+
+        <div class="status">
+          <div>
+            <span class="label">Task</span>
+            <strong id="taskId">None</strong>
+          </div>
+          <div>
+            <span class="label">Status</span>
+            <strong id="statusText">Waiting for input</strong>
+          </div>
+          <div>
+            <span class="label">Message</span>
+            <strong id="messageText">Select a template and generate.</strong>
+          </div>
+        </div>
+
+        <a id="downloadLink" class="download hidden" href="#">Download MP4</a>
+      </section>
+    </main>
+    <script src="/web/app.js"></script>
+  </body>
+</html>

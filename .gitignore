@@ -1,6 +1,7 @@
 # Storage (runtime data, not in git)
 storage/
 .tools/
+.tmp/
 
 # Spike outputs
 spikes/**/output/
