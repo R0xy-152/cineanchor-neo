@@ -67,32 +67,42 @@ Known risks:
 - `BLENDER_PATH` and `FFMPEG_PATH` must be configured per machine.
 - The current Project JSON remains provisional Spike schema.
 
-## Route 3: ComfyUI Keyframe Enhancement
+## Route 3: ComfyUI Conservative AI Enhancement
 
-Status: FAIL for Route 3 acceptance.
+Status: PARTIAL
 
-Goal question: Can ComfyUI improve Blender output without subject deformation, text corruption, or severe flicker?
+Goal question: Can Route 3 be included in V0.1 as conservative AI enhancement without subject deformation, text corruption, flicker, or unacceptable processing time?
 
-Conclusion: FAIL for the current Route 3 acceptance. The isolated keyframe extraction and ComfyUI API client scripts worked, 4 keyframes per input video were enhanced, and side-by-side comparisons were generated. However, direct full-frame SDXL img2img corrupted the `character_intro` subtitle in 4/4 reviewed frames.
+Conclusion: PARTIAL. Direct full-frame img2img over final frames failed because it corrupted rendered subtitle text. Conservative ComfyUI reference plus FFmpeg enhancement works end-to-end and final MP4s remain stable because ComfyUI frames are not used as final frames. Text and subject/product shape are stable. However, the visual improvement is light, so Route 3 should be treated as an optional V0.1 preset rather than a core selling point.
+
+### Previous direct full-frame img2img: FAIL
+
+Direct full-frame SDXL img2img processed extracted keyframes successfully, but corrupted the `character_intro` subtitle in 4 of 4 reviewed frames. This validates the V0.1 decision to exclude full-frame AI video regeneration and to keep text-bearing final frames in Blender/FFmpeg output.
+
+### Conservative ComfyUI reference + FFmpeg enhancement: PARTIAL
 
 | Field | Result |
 |---|---|
-| Commands run | Checked ComfyUI with `D:\ComfyUI\comfyui_client.py`; extracted keyframes with FFmpeg; ran ComfyUI API client; generated side-by-side comparisons; compiled Python script. |
+| Commands run | Created `spike/comfy-lut-enhance`; parsed PowerShell scripts; compiled Python scripts; extracted keyframes; ran ComfyUI reference workflow; analyzed color parameters; applied FFmpeg enhancement; generated comparisons; ran ffprobe on enhanced MP4s. |
 | Input assets | `spikes/render_json/output/web/5e056af9c3294a8c8f91954e9a47b58f/final.mp4`, `spikes/render_json/output/web/73f8c80da1394e2bacb4cc4d3f0d4fc1/final.mp4` |
-| Output artifacts | Raw keyframes under `spikes/comfy_enhance/output/*/keyframes_raw/`; enhanced frames under `spikes/comfy_enhance/output/*/keyframes_enhanced/`; comparisons under `spikes/comfy_enhance/output/*/comparisons/`; `spikes/comfy_enhance/output/comfy_run_report.json` |
-| ComfyUI URL | `http://127.0.0.1:8188`; script now also reads `COMFYUI_API_URL` |
-| Workflow | `spikes/comfy_enhance/workflows/conservative_sdxl_img2img_api.json` |
-| Model / checkpoint notes | ComfyUI `0.25.0`; checkpoint `RealVisXL_V5.0_Lightning_fp16.safetensors`; 1116 nodes available. |
-| Per-frame processing time | character_intro: 7.444s, 3.306s, 3.237s, 3.222s; product_orbit: 3.234s, 3.233s, 3.257s, 3.192s. |
-| Machine / GPU notes | NVIDIA GeForce RTX 5070 Ti, 16303 MB VRAM; about 2124 MB used before run; sampled peak about 11421 MB; about 8902 MB used after run because ComfyUI kept the model resident. |
-| Visual review | Subject shape mostly preserved; product frames acceptable; character subtitle corrupted in 4/4 enhanced frames. |
-| Pass / Fail | FAIL |
-| Blocking errors | None after ComfyUI was started. Acceptance failed because text corruption is unacceptable. |
-| Next decision | Do not integrate ComfyUI into the Web render chain yet. Retry only with pre-text enhancement or masked text preservation. |
+| Output artifacts | `spikes/comfy_lut_enhance/output/character_intro/enhanced_ffmpeg.mp4`, `spikes/comfy_lut_enhance/output/product_orbit/enhanced_ffmpeg.mp4`, raw/reference/comparison images under `spikes/comfy_lut_enhance/output/*/`, `spikes/comfy_lut_enhance/output/color_params.json` |
+| ComfyUI URL | `http://127.0.0.1:8188` |
+| Workflow | `spikes/comfy_lut_enhance/workflows/conservative_sdxl_reference_api.json` |
+| Model / checkpoint notes | ComfyUI checkpoint `RealVisXL_V5.0_Lightning_fp16.safetensors`; workflow settings `steps=6`, `cfg=1.4`, `denoise=0.08`. |
+| Per-frame processing time | character_intro: 2.500s, 2.160s, 2.177s, 2.191s; product_orbit: 2.143s, 2.150s, 2.199s, 2.191s. |
+| Machine / GPU notes | NVIDIA GeForce RTX 5070 Ti, 16303 MB VRAM; about 8989 MB used before ComfyUI reference run; sampled peak 9306 MB; about 8944 MB after run. |
+| Color parameters | character_intro: brightness 0.0024, contrast 0.986, saturation 0.95, gamma 0.9988; product_orbit: brightness 0.0035, contrast 0.9806, saturation 1.0197, gamma 0.9982. |
+| FFmpeg filters | `eq` plus `unsharp=5:5:0.32:3:3:0.12`; exact filter strings are recorded in `docs/spike_report_comfy_lut.md`. |
+| ffprobe | PASS: character output is h264 720x1280, 24fps, 4s, 96 frames; product output is h264 1280x720, 12fps, 4s, 48 frames. |
+| Visual review | Final FFmpeg output preserves text and subject/product shape. Improvement is mostly subtle sharpening and slight color adjustment. |
+| Pass / Fail | PARTIAL |
+| Blocking errors | One script bug in PowerShell JSON array loading was fixed; no remaining blocker in the conservative Route 3 chain. |
+| Next decision | Keep full-frame AI video regeneration excluded from V0.1. Keep conservative FFmpeg/LUT enhancement as an optional preset only. |
 
 Known risks:
 
-- Direct full-frame img2img over rendered text is unsafe; rendered text should be applied after enhancement or protected by a mask.
-- ComfyUI retains GPU memory after processing and may conflict with Blender unless GPU access is serialized or the model is unloaded.
-- Low-denoise SDXL img2img can still alter UI/text details; manual side-by-side review remains required.
-- This spike intentionally processes keyframes only, not all video frames.
+- This is not a true LUT solver; it estimates broad video-wide parameters.
+- ComfyUI reference images can still corrupt text and must not become final frames.
+- Visual lift is too mild to position as a core V0.1 AI feature or portfolio selling point.
+- ComfyUI retains GPU memory and may conflict with Blender if run concurrently.
+- Non-developer feedback for conservative Route 3 has not been collected yet; manual review remains pending.
