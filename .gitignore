@@ -11,6 +11,10 @@ spikes/**/input/*.png
 spikes/**/input/*.jpg
 spikes/**/input/*.jpeg
 
+# Sample assets (keep README, exclude binary assets)
+samples/assets/*.png
+samples/assets/*.glb
+
 # Rendered video
 *.mp4
 *.mov

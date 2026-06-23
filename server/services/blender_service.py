@@ -28,7 +28,7 @@ class BlenderService:
         asset_path_text = project.assets[0].path
         asset_path = Path(asset_path_text)
         if not asset_path.is_absolute():
-            asset_path = REPO_ROOT / asset_path
+            asset_path = settings.STORAGE_DIR / asset_path
         asset_path = asset_path.resolve()
 
         if not asset_path.exists():
