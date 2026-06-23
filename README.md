@@ -2,7 +2,7 @@
 
 Generate 8-15 second game promotion videos from PNG images or GLB models.
 
-**Stage:** Spike Technical Validation
+**Stage:** V0.1 Official Development / Phase A
 
 ## What is CineAnchor?
 
@@ -26,8 +26,33 @@ CineAnchor helps mobile game and indie game operators create promotional short v
 - [x] Route 2: JSON-Driven Template Rendering
 - [ ] Route 3: Conservative AI Enhancement (full-frame img2img failed; ComfyUI reference + FFmpeg is PARTIAL)
 - [x] Route 4: Web To Local Render Chain
+- [x] V0.1 Phase A started: backend foundation and formal Project JSON schema
 
 See `docs/spike_results.md` for detailed validation results.
+
+## V0.1 Backend Foundation
+
+V0.1 official development has started. The current goal is the formal backend
+foundation: config handling, Project JSON schema, error model, in-memory task
+acceptance, and the minimum render API contract.
+
+The core V0.1 value remains:
+
+```text
+Web -> FastAPI -> Project JSON -> Blender Eevee -> FFmpeg -> MP4
+```
+
+Route 3 AI enhancement is PARTIAL and optional. `ai_enhance.enabled` defaults to
+`false`; ComfyUI is not called by the standard V0.1 render path.
+
+Run backend checks:
+
+```powershell
+.\.venv\Scripts\python.exe -m py_compile server\main.py server\config.py server\routes\render.py server\services\errors.py server\schemas\project.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests\backend
+.\.venv\Scripts\python.exe -m unittest discover -s tests\smoke
+git diff --check
+```
 
 ## Route 4 Local Web Spike
 

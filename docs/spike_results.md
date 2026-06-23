@@ -1,5 +1,16 @@
 # CineAnchor Neo Spike Results
 
+## V0.1 Start Decision
+
+Status: STARTED
+
+All major Spike routes are complete enough to start V0.1 official development.
+The V0.1 core path is Web -> FastAPI -> Project JSON -> Blender Eevee -> FFmpeg
+-> MP4.
+
+Route 3 remains PARTIAL and optional. Full-frame AI video regeneration stays
+forbidden for V0.1, and ComfyUI is not required for standard rendering.
+
 ## Route 2: JSON-Driven Template Rendering
 
 Status: PASS
