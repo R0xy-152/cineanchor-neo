@@ -94,8 +94,20 @@ def download_render(task_id: str) -> Any:
             ),
         )
 
-    output_path = Path(task.output_path) if task.output_path else None
-    if not output_path or not output_path.exists():
+    # Prefer enhanced MP4, fall back to standard MP4
+    download_path: Path | None = None
+    for candidate in (
+        task.enhanced_output_path,
+        task.output_path,
+        task.standard_output_path,
+    ):
+        if candidate:
+            p = Path(candidate)
+            if p.exists():
+                download_path = p
+                break
+
+    if download_path is None:
         return JSONResponse(
             status_code=404,
             content=error_payload(
@@ -105,7 +117,7 @@ def download_render(task_id: str) -> Any:
         )
 
     return FileResponse(
-        path=output_path,
+        path=download_path,
         media_type="video/mp4",
         filename=f"cineanchor-{task_id[:8]}.mp4",
     )
@@ -121,7 +133,7 @@ def _execute_render(task_id: str) -> None:
 
     project = ProjectJSON.model_validate(task.project)
     frames_dir = settings.RENDERS_DIR / task_id / "frames"
-    output_path = settings.EXPORTS_DIR / task_id / "final.mp4"
+    standard_path = settings.EXPORTS_DIR / task_id / "final.mp4"
 
     try:
         # ── Blender phase ───────────────────────────────────────────
@@ -140,25 +152,57 @@ def _execute_render(task_id: str) -> None:
         )
         FFmpegService.compose_mp4(
             frames_dir=frames_dir,
-            output_path=output_path,
+            output_path=standard_path,
             fps=project.output.fps,
             task_id=task_id,
         )
 
-        # ── ai_enhance check ────────────────────────────────────────
+        # ── optional AI enhancement ─────────────────────────────────
+        enhanced_path: Path | None = None
+        warning_code: str | None = None
+        warning_message: str | None = None
+
         if project.ai_enhance.enabled:
-            logger.warning(
-                "task %s: ai_enhance.enabled=true is not supported in V0.1. "
-                "Standard MP4 output will be returned without AI enhancement.",
+            task_store.update(
                 task_id,
+                status=TaskStatus.ENHANCING,
+                message="AI enhancement is running.",
             )
+            enhanced_path = settings.EXPORTS_DIR / task_id / "enhanced.mp4"
+
+            try:
+                FFmpegService.enhance_mp4(
+                    input_path=standard_path,
+                    output_path=enhanced_path,
+                    preset="conservative_premium",
+                    task_id=task_id,
+                )
+                logger.info(
+                    "task %s: enhancement complete, enhanced MP4 ready.",
+                    task_id,
+                )
+            except CineAnchorError as exc:
+                logger.warning(
+                    "task %s: enhancement failed [%s] %s — "
+                    "falling back to standard MP4.",
+                    task_id,
+                    exc.code.value,
+                    exc.message,
+                )
+                warning_code = exc.code.value
+                warning_message = exc.message
+                enhanced_path = None
 
         # ── done ────────────────────────────────────────────────────
         task_store.update(
             task_id,
             status=TaskStatus.DONE,
             message="Render completed.",
-            output_path=str(output_path),
+            output_path=str(enhanced_path or standard_path),
+            standard_output_path=str(standard_path),
+            enhanced_output_path=str(enhanced_path) if enhanced_path else None,
+            warning_code=warning_code,
+            warning_message=warning_message,
         )
 
     except CineAnchorError as exc:

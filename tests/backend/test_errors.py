@@ -16,6 +16,10 @@ class ErrorCodeTests(unittest.TestCase):
             "FFMPEG_COMPOSE_FAILED",
             "COMFY_ENHANCE_FAILED",
             "RENDER_TIMEOUT",
+            "TASK_NOT_FOUND",
+            "OUTPUT_NOT_READY",
+            "OUTPUT_NOT_FOUND",
+            "AI_ENHANCE_SKIPPED",
         }
         self.assertTrue(required.issubset({code.value for code in ErrorCode}))
 

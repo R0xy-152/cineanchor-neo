@@ -17,6 +17,7 @@ class ErrorCode(str, Enum):
     TASK_NOT_FOUND = "TASK_NOT_FOUND"
     OUTPUT_NOT_READY = "OUTPUT_NOT_READY"
     OUTPUT_NOT_FOUND = "OUTPUT_NOT_FOUND"
+    AI_ENHANCE_SKIPPED = "AI_ENHANCE_SKIPPED"
 
 
 DEFAULT_MESSAGES: dict[ErrorCode, str] = {
@@ -31,6 +32,7 @@ DEFAULT_MESSAGES: dict[ErrorCode, str] = {
     ErrorCode.TASK_NOT_FOUND: "Task was not found",
     ErrorCode.OUTPUT_NOT_READY: "Output is not ready",
     ErrorCode.OUTPUT_NOT_FOUND: "Output file was not found",
+    ErrorCode.AI_ENHANCE_SKIPPED: "AI enhancement was skipped, standard output returned",
 }
 
 

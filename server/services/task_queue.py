@@ -28,6 +28,10 @@ class RenderTask:
     error_code: str | None = None
     message: str = "Queued"
     output_path: str | None = None
+    standard_output_path: str | None = None
+    enhanced_output_path: str | None = None
+    warning_code: str | None = None
+    warning_message: str | None = None
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
 
@@ -39,6 +43,10 @@ class RenderTask:
             "error_code": self.error_code,
             "message": self.message,
             "output_path": self.output_path,
+            "standard_output_path": self.standard_output_path,
+            "enhanced_output_path": self.enhanced_output_path,
+            "warning_code": self.warning_code,
+            "warning_message": self.warning_message,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }

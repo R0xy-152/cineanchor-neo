@@ -24,7 +24,7 @@ CineAnchor helps mobile game and indie game operators create promotional short v
 - [x] Route 0: 3D Render Loop
 - [x] Route 1: PNG 2.5D Video
 - [x] Route 2: JSON-Driven Template Rendering
-- [ ] Route 3: Conservative AI Enhancement (full-frame img2img failed; ComfyUI reference + FFmpeg is PARTIAL)
+- [x] Route 3: Conservative AI Enhancement (FFmpeg-based conservative_premium preset; ComfyUI is future hook)
 - [x] Route 4: Web To Local Render Chain
 - [x] V0.1 Phase A started: backend foundation and formal Project JSON schema
 
@@ -37,8 +37,10 @@ V0.1 official development has started. The backend foundation is complete:
 - FastAPI app with `/health`, `POST /api/render`, `GET /api/render/{task_id}/status`, `GET /api/render/{task_id}/download`
 - Blender headless render execution via `blender/scripts/render_project.py`
 - FFmpeg MP4 composition (H.264, yuv420p, CRF 18)
-- CineAnchorError exception hierarchy with 11 error codes
+- CineAnchorError exception hierarchy with 12 error codes
 - In-memory task store with threading (no database dependency)
+- Optional AI enhancement: FFmpeg `conservative_premium` preset (eq + unsharp)
+- Enhancement fallback: standard MP4 returned if enhancement fails (warning, not error)
 - Config via environment variables + `server/config.py`
 
 The core V0.1 value:

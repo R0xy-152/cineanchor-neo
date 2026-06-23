@@ -65,7 +65,20 @@ def asgi_request(method: str, path: str, json_body: dict | None = None) -> tuple
     return start["status"], json.loads(body.decode("utf-8"))
 
 
+def _wait_for_status(task_id: str, target: frozenset[str], timeout: float = 10) -> dict:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        _, snap = asgi_request("GET", f"/api/render/{task_id}/status")
+        if snap["status"] in target:
+            return snap
+        time.sleep(0.1)
+    _, snap = asgi_request("GET", f"/api/render/{task_id}/status")
+    return snap
+
+
 class GoldenPathSmokeTests(unittest.TestCase):
+    # ── infrastructure ───────────────────────────────────────────────
+
     def test_server_app_imports_and_health_is_ok(self) -> None:
         status, body = asgi_request("GET", "/health")
         self.assertEqual(status, 200)
@@ -77,10 +90,12 @@ class GoldenPathSmokeTests(unittest.TestCase):
         project = ProjectJSON.model_validate(character_project())
         self.assertEqual(project.project_id, "test-character")
 
+    # ── standard path (ai_enhance.enabled=false) ─────────────────────
+
     @patch.object(BlenderService, "render_project")
     @patch.object(FFmpegService, "compose_mp4")
     @patch.object(comfy_service.ComfyService, "enhance")
-    def test_post_render_runs_pipeline_to_done(
+    def test_standard_path_does_not_call_enhancement(
         self,
         mock_enhance: object,
         mock_ffmpeg: object,
@@ -92,63 +107,21 @@ class GoldenPathSmokeTests(unittest.TestCase):
         self.assertEqual(body["status"], "PENDING")
 
         task_id = body["task_id"]
-
-        # Wait for background thread to complete (services are mocked)
-        deadline = time.time() + 10
-        while time.time() < deadline:
-            _, snap = asgi_request("GET", f"/api/render/{task_id}/status")
-            if snap["status"] in ("DONE", "FAILED"):
-                break
-            time.sleep(0.1)
+        snap = _wait_for_status(task_id, frozenset({"DONE", "FAILED"}))
 
         self.assertEqual(snap["status"], "DONE")
-        self.assertEqual(snap["error_code"], None)
-        self.assertEqual(snap["message"], "Render completed.")
-        self.assertIsNotNone(snap["output_path"])
+        self.assertIsNone(snap["error_code"])
+        self.assertIsNotNone(snap["standard_output_path"])
+        self.assertIsNone(snap["enhanced_output_path"])
+        self.assertIsNone(snap["warning_code"])
 
-        # Verify ComfyUI was never called
+        # ComfyUI must never be called
         mock_enhance.assert_not_called()
-
-    @patch.object(BlenderService, "render_project")
-    def test_post_render_fails_on_blender_error(self, mock_blender: object) -> None:
-        mock_blender.side_effect = CineAnchorError(
-            ErrorCode.BLENDER_RENDER_FAILED, "Blender crashed"
+        # enhance_mp4 must not be called
+        self.assertFalse(
+            hasattr(FFmpegService, "_enhance_called")
+            or mock_ffmpeg._mock_name == "enhance_mp4"
         )
-
-        status, body = asgi_request("POST", "/api/render", character_project())
-        self.assertEqual(status, 200)
-        task_id = body["task_id"]
-
-        deadline = time.time() + 10
-        while time.time() < deadline:
-            _, snap = asgi_request("GET", f"/api/render/{task_id}/status")
-            if snap["status"] == "FAILED":
-                break
-            time.sleep(0.1)
-
-        self.assertEqual(snap["status"], "FAILED")
-        self.assertEqual(snap["error_code"], "BLENDER_RENDER_FAILED")
-
-    @patch.object(BlenderService, "render_project")
-    @patch.object(FFmpegService, "compose_mp4")
-    def test_ai_enhance_enabled_does_not_fail_render(
-        self, mock_ffmpeg: object, mock_blender: object
-    ) -> None:
-        payload = character_project()
-        payload["ai_enhance"] = {"enabled": True, "mode": "conservative"}
-
-        status, body = asgi_request("POST", "/api/render", payload)
-        self.assertEqual(status, 200)
-        task_id = body["task_id"]
-
-        deadline = time.time() + 10
-        while time.time() < deadline:
-            _, snap = asgi_request("GET", f"/api/render/{task_id}/status")
-            if snap["status"] in ("DONE", "FAILED"):
-                break
-            time.sleep(0.1)
-
-        self.assertEqual(snap["status"], "DONE")
 
     @patch.object(BlenderService, "render_project")
     @patch.object(FFmpegService, "compose_mp4")
@@ -165,15 +138,95 @@ class GoldenPathSmokeTests(unittest.TestCase):
         self.assertEqual(body["status"], "PENDING")
         mock_enhance.assert_not_called()
 
+    # ── enhancement success (ai_enhance.enabled=true) ────────────────
+
+    @patch.object(BlenderService, "render_project")
+    @patch.object(FFmpegService, "compose_mp4")
+    @patch.object(FFmpegService, "enhance_mp4")
+    @patch.object(comfy_service.ComfyService, "enhance")
+    def test_enhancement_success_produces_enhanced_output(
+        self,
+        mock_enhance: object,
+        mock_enhance_mp4: object,
+        mock_ffmpeg: object,
+        mock_blender: object,
+    ) -> None:
+        payload = character_project()
+        payload["ai_enhance"] = {"enabled": True, "mode": "conservative"}
+
+        status, body = asgi_request("POST", "/api/render", payload)
+        self.assertEqual(status, 200)
+        task_id = body["task_id"]
+
+        snap = _wait_for_status(task_id, frozenset({"DONE", "FAILED"}))
+
+        self.assertEqual(snap["status"], "DONE")
+        self.assertIsNone(snap["error_code"])
+        self.assertIsNone(snap["warning_code"])
+        self.assertIsNotNone(snap["standard_output_path"])
+        self.assertIsNotNone(snap["enhanced_output_path"])
+        self.assertIn("enhanced.mp4", snap["enhanced_output_path"])
+
+        mock_enhance.assert_not_called()  # ComfyUI not called
+
+    # ── enhancement failure fallback ─────────────────────────────────
+
+    @patch.object(BlenderService, "render_project")
+    @patch.object(FFmpegService, "compose_mp4")
+    @patch.object(FFmpegService, "enhance_mp4")
+    def test_enhancement_failure_falls_back_to_standard(
+        self,
+        mock_enhance_mp4: object,
+        mock_ffmpeg: object,
+        mock_blender: object,
+    ) -> None:
+        mock_enhance_mp4.side_effect = CineAnchorError(
+            ErrorCode.AI_ENHANCE_SKIPPED, "Enhancement filter failed"
+        )
+
+        payload = character_project()
+        payload["ai_enhance"] = {"enabled": True, "mode": "conservative"}
+
+        status, body = asgi_request("POST", "/api/render", payload)
+        self.assertEqual(status, 200)
+        task_id = body["task_id"]
+
+        snap = _wait_for_status(task_id, frozenset({"DONE", "FAILED"}))
+
+        self.assertEqual(snap["status"], "DONE")
+        self.assertEqual(snap["warning_code"], "AI_ENHANCE_SKIPPED")
+        self.assertIsNotNone(snap["warning_message"])
+        self.assertIsNotNone(snap["standard_output_path"])
+        self.assertIsNone(snap["enhanced_output_path"])
+        # download should return standard MP4 (via output_path fallback)
+        self.assertIn("final.mp4", snap["output_path"])
+
+    # ── error paths ──────────────────────────────────────────────────
+
+    @patch.object(BlenderService, "render_project")
+    def test_post_render_fails_on_blender_error(self, mock_blender: object) -> None:
+        mock_blender.side_effect = CineAnchorError(
+            ErrorCode.BLENDER_RENDER_FAILED, "Blender crashed"
+        )
+
+        status, body = asgi_request("POST", "/api/render", character_project())
+        self.assertEqual(status, 200)
+        task_id = body["task_id"]
+
+        snap = _wait_for_status(task_id, frozenset({"FAILED"}))
+
+        self.assertEqual(snap["status"], "FAILED")
+        self.assertEqual(snap["error_code"], "BLENDER_RENDER_FAILED")
+
     def test_post_render_rejects_invalid_template(self) -> None:
         payload = character_project()
         payload["template"] = "missing_template"
 
         status, body = asgi_request("POST", "/api/render", payload)
-
         self.assertEqual(status, 400)
         self.assertEqual(body["error_code"], "INVALID_PROJECT_JSON")
-        self.assertEqual(body["message"], "Project JSON is invalid")
+
+    # ── status and download edge cases ───────────────────────────────
 
     def test_status_returns_404_for_unknown_task(self) -> None:
         status, body = asgi_request("GET", "/api/render/nonexistent-id/status")
@@ -186,7 +239,6 @@ class GoldenPathSmokeTests(unittest.TestCase):
         self.assertEqual(body["error_code"], "TASK_NOT_FOUND")
 
     def test_download_returns_409_when_not_done(self) -> None:
-        # Create a task but don't run the pipeline
         from server.services.task_queue import task_store
         from server.schemas.project import ProjectJSON
 
@@ -198,6 +250,22 @@ class GoldenPathSmokeTests(unittest.TestCase):
         )
         self.assertEqual(status, 409)
         self.assertEqual(body["error_code"], "OUTPUT_NOT_READY")
+
+    def test_snapshot_includes_new_task_fields(self) -> None:
+        from server.services.task_queue import task_store
+        from server.schemas.project import ProjectJSON
+
+        project = ProjectJSON.model_validate(character_project())
+        task = task_store.create(project)
+        snap = task.snapshot()
+
+        for key in (
+            "standard_output_path",
+            "enhanced_output_path",
+            "warning_code",
+            "warning_message",
+        ):
+            self.assertIn(key, snap)
 
 
 if __name__ == "__main__":

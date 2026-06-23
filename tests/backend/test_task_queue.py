@@ -56,6 +56,10 @@ class TaskQueueTests(unittest.TestCase):
             "error_code",
             "message",
             "output_path",
+            "standard_output_path",
+            "enhanced_output_path",
+            "warning_code",
+            "warning_message",
             "created_at",
             "updated_at",
         ):

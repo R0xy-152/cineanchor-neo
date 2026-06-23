@@ -74,5 +74,63 @@ class FFmpegServiceTests(unittest.TestCase):
         self.assertTrue(self.output_path.parent.exists())
 
 
+    # ── enhance_mp4 tests ─────────────────────────────────────────
+
+    @patch("server.services.ffmpeg_service.subprocess.run")
+    def test_enhance_constructs_correct_command(self, mock_run: MagicMock) -> None:
+        mock_run.return_value.returncode = 0
+        input_path = self.output_path
+        enhanced_path = settings.EXPORTS_DIR / self.task_id / "enhanced.mp4"
+
+        with patch.object(Path, "exists", return_value=True):
+            FFmpegService.enhance_mp4(
+                input_path, enhanced_path, "conservative_premium", self.task_id
+            )
+
+        mock_run.assert_called_once()
+        command = mock_run.call_args[0][0] if mock_run.call_args[0] else mock_run.call_args[1]["args"]
+        self.assertIn("-vf", command)
+        # verify conservative filter chain is present
+        filter_arg = command[command.index("-vf") + 1]
+        self.assertIn("eq=brightness", filter_arg)
+        self.assertIn("unsharp", filter_arg)
+        self.assertIn("libx264", command)
+
+    @patch("server.services.ffmpeg_service.subprocess.run")
+    def test_enhance_raises_on_unknown_preset(self, mock_run: MagicMock) -> None:
+        with self.assertRaises(CineAnchorError) as ctx:
+            FFmpegService.enhance_mp4(
+                self.output_path,
+                settings.EXPORTS_DIR / self.task_id / "enhanced.mp4",
+                "full_ai_redraw",
+                self.task_id,
+            )
+        self.assertEqual(ctx.exception.code, ErrorCode.AI_ENHANCE_SKIPPED)
+
+    @patch("server.services.ffmpeg_service.subprocess.run")
+    def test_enhance_raises_on_nonzero_exit(self, mock_run: MagicMock) -> None:
+        mock_run.return_value.returncode = 1
+        with self.assertRaises(CineAnchorError) as ctx:
+            FFmpegService.enhance_mp4(
+                self.output_path,
+                settings.EXPORTS_DIR / self.task_id / "enhanced.mp4",
+                "conservative_premium",
+                self.task_id,
+            )
+        self.assertEqual(ctx.exception.code, ErrorCode.AI_ENHANCE_SKIPPED)
+
+    @patch("server.services.ffmpeg_service.subprocess.run")
+    def test_enhance_raises_when_output_not_created(self, mock_run: MagicMock) -> None:
+        mock_run.return_value.returncode = 0
+        with self.assertRaises(CineAnchorError) as ctx:
+            FFmpegService.enhance_mp4(
+                self.output_path,
+                settings.EXPORTS_DIR / self.task_id / "enhanced.mp4",
+                "conservative_premium",
+                self.task_id,
+            )
+        self.assertEqual(ctx.exception.code, ErrorCode.AI_ENHANCE_SKIPPED)
+
+
 if __name__ == "__main__":
     unittest.main()
