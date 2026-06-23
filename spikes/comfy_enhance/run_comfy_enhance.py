@@ -36,8 +36,13 @@ class ComfyError(RuntimeError):
 
 
 def parse_args() -> argparse.Namespace:
+    default_comfy_url = (
+        os.environ.get("COMFYUI_API_URL")
+        or os.environ.get("COMFYUI_URL")
+        or "http://127.0.0.1:8188"
+    )
     parser = argparse.ArgumentParser(description="Route 3 ComfyUI keyframe enhancement spike")
-    parser.add_argument("--comfy-url", default=os.environ.get("COMFYUI_URL", "http://127.0.0.1:8188"))
+    parser.add_argument("--comfy-url", default=default_comfy_url)
     parser.add_argument("--workflow", default=str(DEFAULT_WORKFLOW))
     parser.add_argument("--output-root", default=str(OUTPUT_ROOT))
     parser.add_argument("--checkpoint", default="")

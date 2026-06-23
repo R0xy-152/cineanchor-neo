@@ -1,7 +1,7 @@
 param(
     [string]$CharacterMp4 = "",
     [string]$ProductMp4 = "",
-    [string]$ComfyUrl = $env:COMFYUI_URL,
+    [string]$ComfyUrl = $(if ($env:COMFYUI_API_URL) { $env:COMFYUI_API_URL } elseif ($env:COMFYUI_URL) { $env:COMFYUI_URL } else { "" }),
     [string]$Workflow = "workflows/conservative_sdxl_img2img_api.json",
     [string]$Checkpoint = "",
     [string]$FfmpegPath = $env:FFMPEG_PATH,

@@ -24,7 +24,7 @@ CineAnchor helps mobile game and indie game operators create promotional short v
 - [x] Route 0: 3D Render Loop
 - [x] Route 1: PNG 2.5D Video
 - [x] Route 2: JSON-Driven Template Rendering
-- [ ] Route 3: ComfyUI AI Enhancement (scripted; blocked until ComfyUI API is reachable)
+- [ ] Route 3: ComfyUI AI Enhancement (technical chain works; acceptance failed on text corruption)
 - [x] Route 4: Web To Local Render Chain
 
 See `docs/spike_results.md` for detailed validation results.
@@ -61,13 +61,15 @@ $env:FFMPEG_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\
 This spike is isolated from the Web/FastAPI render chain. It extracts 4 keyframes from existing MP4 outputs, sends them to ComfyUI, and creates side-by-side comparison images.
 
 ```powershell
-$env:COMFYUI_URL="http://127.0.0.1:8188"
+$env:COMFYUI_API_URL="http://127.0.0.1:8188"
 $env:FFMPEG_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffmpeg.exe"
 $env:FFPROBE_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffprobe.exe"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\spikes\comfy_enhance\run_spike.ps1
 ```
 
-Current Route 3 run status: ComfyUI API was not reachable at `http://127.0.0.1:8188`, so enhanced frames and comparisons were not produced yet.
+Route 3 uses `COMFYUI_API_URL` first, then falls back to `COMFYUI_URL` and `http://127.0.0.1:8188`.
+
+Current Route 3 decision: the ComfyUI keyframe chain works, but direct full-frame img2img corrupted rendered subtitle text. Do not integrate it into the Web render path until enhancement happens before text overlay or text pixels are masked/restored.
 
 ## Development
 

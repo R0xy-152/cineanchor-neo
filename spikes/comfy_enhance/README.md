@@ -30,7 +30,7 @@ Set tool paths without hardcoding them in scripts:
 ```powershell
 $env:FFMPEG_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffmpeg.exe"
 $env:FFPROBE_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffprobe.exe"
-$env:COMFYUI_URL="http://127.0.0.1:8188"
+$env:COMFYUI_API_URL="http://127.0.0.1:8188"
 ```
 
 Extract 4 keyframes per input video:
@@ -58,6 +58,12 @@ Or run the full isolated spike:
 ```
 
 ## Workflow
+
+Default API URL resolution:
+
+- `COMFYUI_API_URL`
+- `COMFYUI_URL`
+- `http://127.0.0.1:8188`
 
 Default workflow:
 

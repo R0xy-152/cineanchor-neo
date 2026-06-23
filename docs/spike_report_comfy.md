@@ -4,7 +4,7 @@ Date: 2026-06-23
 
 Branch: `spike/comfy-keyframe-enhance`
 
-Status: FAIL for this run, blocked by ComfyUI API availability.
+Status: FAIL for Route 3 acceptance. ComfyUI processing succeeded, but text corruption was observed.
 
 ## Goal
 
@@ -16,16 +16,17 @@ This spike is isolated from the Web/FastAPI render path. It does not modify `ser
 
 ## Workflow Used
 
-- ComfyUI URL attempted: `http://127.0.0.1:8188`
+- ComfyUI URL: `http://127.0.0.1:8188`
+- ComfyUI version: `0.25.0`
 - Workflow file: `spikes/comfy_enhance/workflows/conservative_sdxl_img2img_api.json`
 - Workflow type: SDXL img2img, low-denoise conservative enhancement
-- Settings in script defaults: `steps=8`, `cfg=1.6`, `denoise=0.12`
-- Checkpoint selection: automatic via ComfyUI `/object_info`, preferring `RealVisXL`, `Lightning`, then SDXL names
-- Local checkpoint files observed on disk:
-  - `D:\ComfyUI\models\checkpoints\RealVisXL_V5.0_Lightning_fp16.safetensors`
-  - `D:\ComfyUI\models\checkpoints\sd_xl_base_1.0_0.9vae.safetensors`
+- Settings used: `steps=8`, `cfg=1.6`, `denoise=0.12`
+- Checkpoint used: `RealVisXL_V5.0_Lightning_fp16.safetensors`
+- Checkpoint choices exposed by ComfyUI:
+  - `RealVisXL_V5.0_Lightning_fp16.safetensors`
+  - `sd_xl_base_1.0_0.9vae.safetensors`
 
-The checkpoint was not confirmed through the ComfyUI API because the API was not reachable.
+The workflow was submitted through ComfyUI REST endpoints and the run report was written to `spikes/comfy_enhance/output/comfy_run_report.json`.
 
 ## Input Paths
 
@@ -60,10 +61,16 @@ Expected enhanced output directories, not populated in this run:
 - `spikes/comfy_enhance/output/character_intro/keyframes_enhanced/`
 - `spikes/comfy_enhance/output/product_orbit/keyframes_enhanced/`
 
-Expected comparison directories, skipped because enhanced frames were unavailable:
+Generated comparison images:
 
-- `spikes/comfy_enhance/output/character_intro/comparisons/`
-- `spikes/comfy_enhance/output/product_orbit/comparisons/`
+- `spikes/comfy_enhance/output/character_intro/comparisons/frame_01_comparison.png`
+- `spikes/comfy_enhance/output/character_intro/comparisons/frame_02_comparison.png`
+- `spikes/comfy_enhance/output/character_intro/comparisons/frame_03_comparison.png`
+- `spikes/comfy_enhance/output/character_intro/comparisons/frame_04_comparison.png`
+- `spikes/comfy_enhance/output/product_orbit/comparisons/frame_01_comparison.png`
+- `spikes/comfy_enhance/output/product_orbit/comparisons/frame_02_comparison.png`
+- `spikes/comfy_enhance/output/product_orbit/comparisons/frame_03_comparison.png`
+- `spikes/comfy_enhance/output/product_orbit/comparisons/frame_04_comparison.png`
 
 Generated outputs are ignored by Git.
 
@@ -81,6 +88,15 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8188/system_stats" -TimeoutSec 5
 
 Result: failed, remote server refused the connection.
 
+The retry after ComfyUI was started succeeded:
+
+```powershell
+$env:COMFYUI_API_URL="http://127.0.0.1:8188"
+.\.venv\Scripts\python.exe D:\ComfyUI\comfyui_client.py
+```
+
+Result: PASS, ComfyUI `0.25.0` reachable, 1116 nodes available.
+
 ```powershell
 nvidia-smi --query-gpu=name,memory.total,memory.used --format=csv,noheader,nounits
 ```
@@ -97,13 +113,20 @@ Result: PASS, extracted 8 raw keyframes total.
 .\.venv\Scripts\python.exe .\spikes\comfy_enhance\run_comfy_enhance.py
 ```
 
-Result: FAIL, `ComfyUI is not reachable at http://127.0.0.1:8188`.
+Initial result: FAIL, API unavailable.
+
+```powershell
+$env:COMFYUI_API_URL="http://127.0.0.1:8188"
+.\.venv\Scripts\python.exe .\spikes\comfy_enhance\run_comfy_enhance.py --timeout-seconds 1200
+```
+
+Retry result: PASS for processing, 8 enhanced frames saved.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\spikes\comfy_enhance\make_comparisons.ps1
 ```
 
-Result: PASS as a safe no-op, comparison generation skipped because enhanced frames were missing.
+Result: PASS, 8 side-by-side comparison images generated.
 
 ```powershell
 .\.venv\Scripts\python.exe -m py_compile spikes\comfy_enhance\run_comfy_enhance.py
@@ -113,62 +136,65 @@ Result: PASS.
 
 ## Per-Frame Timing
 
-ComfyUI did not process any frames because the API was unreachable.
+| Case | Frame | ComfyUI seconds | GPU peak used MB |
+|---|---:|---:|---:|
+| character_intro | 1 | 7.444 | 9263 |
+| character_intro | 2 | 3.306 | 11328 |
+| character_intro | 3 | 3.237 | 11421 |
+| character_intro | 4 | 3.222 | 11364 |
+| product_orbit | 1 | 3.234 | 11334 |
+| product_orbit | 2 | 3.233 | 11336 |
+| product_orbit | 3 | 3.257 | 11353 |
+| product_orbit | 4 | 3.192 | 11334 |
 
-| Case | Frame | ComfyUI seconds |
-|---|---:|---:|
-| character_intro | 1 | not run |
-| character_intro | 2 | not run |
-| character_intro | 3 | not run |
-| character_intro | 4 | not run |
-| product_orbit | 1 | not run |
-| product_orbit | 2 | not run |
-| product_orbit | 3 | not run |
-| product_orbit | 4 | not run |
-
-The ComfyUI script failed during API reachability check after about 2.14 seconds.
+Total ComfyUI script wall time was about 31.1 seconds.
 
 ## GPU Memory Notes
 
 - GPU: NVIDIA GeForce RTX 5070 Ti
 - Total VRAM: 16303 MB
-- Memory before ComfyUI script: about 1901 MB used
-- Memory after failed ComfyUI script: about 1854 MB used
-- During-processing peak: not available because no ComfyUI job ran
+- Memory before ComfyUI script: about 2124 MB used
+- Highest sampled during-processing memory: about 11421 MB used
+- Memory after ComfyUI script: about 8902 MB used
+- Current memory after visual review: about 8947 MB used
+
+ComfyUI kept the model resident after processing. This is a likely GPU scheduling conflict with Blender if both are run at the same time.
 
 ## Manual Visual Check
 
-Not completed in this run because no enhanced frames were produced.
+Manual review was performed against all 8 side-by-side comparison images.
 
 | Check | Result |
 |---|---|
-| Subject deformation | Not checked |
-| Text corruption | Not checked |
-| Severe flicker | Not checked; keyframes only, no full-frame video processing |
-| Promo quality improvement | Not checked |
+| Subject deformation | PASS for this run: character and product silhouettes stayed recognizable. |
+| Text corruption | FAIL: `character_intro` subtitle was corrupted in 4/4 enhanced frames. |
+| Severe flicker | Not fully validated; keyframes only. Product background texture changed slightly across frames, so flicker risk remains. |
+| Promo quality improvement | Mixed: product frames look cleaner, character frames are not usable because subtitle text is damaged. |
 
 ## Acceptance
 
 | Criterion | Result |
 |---|---|
-| ComfyUI API is reachable | FAIL |
-| 4 character_intro keyframes processed | FAIL |
-| 4 product_orbit keyframes processed | FAIL |
-| Enhanced frames saved | FAIL |
-| Side-by-side comparisons generated | FAIL |
-| Processing time recorded | FAIL for frames; connection failure duration recorded |
-| Subject deformation documented | FAIL; no enhanced output |
-| Text corruption documented | FAIL; no enhanced output |
+| ComfyUI API is reachable | PASS |
+| 4 character_intro keyframes processed | PASS |
+| 4 product_orbit keyframes processed | PASS |
+| Enhanced frames saved | PASS |
+| Side-by-side comparisons generated | PASS |
+| Processing time recorded | PASS |
+| Subject deformation documented | PASS |
+| Text corruption documented | FAIL: subtitle text was corrupted in `character_intro`. |
 | Pass/fail decision written | PASS |
 
 ## Known Risks
 
-- ComfyUI environment is not yet a managed project dependency.
-- `D:\ComfyUI` exists and has checkpoints, but no running API process was found.
-- The current workspace `.venv` does not include `torch` or `aiohttp`, so it cannot launch the local ComfyUI source tree.
-- The default workflow is conservative SDXL img2img, but it still may alter text or subject details; visual review is required after the API is available.
+- Full-frame img2img over rendered text is not safe enough for the current template output.
+- AI enhancement should happen before text overlay, or the text region must be masked/restored from the original render.
+- ComfyUI remains resident in VRAM after the run; Blender and ComfyUI need serialized GPU access or explicit unload behavior.
+- The default workflow is conservative SDXL img2img, but it still altered text.
 - Full-frame video enhancement is intentionally out of scope for this spike.
 
 ## Decision
 
-Route 3 fails for this run because the ComfyUI API is not reachable. The isolated extraction and API client scripts are ready; rerun the spike after starting ComfyUI or providing a reachable `COMFYUI_URL`.
+Route 3 fails acceptance in this run. The ComfyUI keyframe chain works technically, but direct full-frame SDXL img2img corrupted rendered subtitle text, so it is not acceptable as the current enhancement strategy for text-bearing final frames.
+
+Recommended next decision: keep ComfyUI out of the Web render chain for now. If Route 3 is retried, enhance pre-text Blender frames or use a mask/post-composite step that preserves original text pixels.
