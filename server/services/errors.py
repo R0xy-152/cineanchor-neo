@@ -16,6 +16,7 @@ class ErrorCode(str, Enum):
     RENDER_TIMEOUT = "RENDER_TIMEOUT"
     TASK_NOT_FOUND = "TASK_NOT_FOUND"
     OUTPUT_NOT_READY = "OUTPUT_NOT_READY"
+    OUTPUT_NOT_FOUND = "OUTPUT_NOT_FOUND"
 
 
 DEFAULT_MESSAGES: dict[ErrorCode, str] = {
@@ -29,6 +30,7 @@ DEFAULT_MESSAGES: dict[ErrorCode, str] = {
     ErrorCode.RENDER_TIMEOUT: "Render timed out",
     ErrorCode.TASK_NOT_FOUND: "Task was not found",
     ErrorCode.OUTPUT_NOT_READY: "Output is not ready",
+    ErrorCode.OUTPUT_NOT_FOUND: "Output file was not found",
 }
 
 

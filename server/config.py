@@ -36,6 +36,7 @@ class Settings:
     RENDERS_DIR: Path
     EXPORTS_DIR: Path
     PROJECTS_DIR: Path
+    LOGS_DIR: Path
     CINEANCHOR_HOST: str
     CINEANCHOR_PORT: int
 
@@ -50,6 +51,7 @@ def load_settings() -> Settings:
         RENDERS_DIR=storage_dir / "renders",
         EXPORTS_DIR=storage_dir / "exports",
         PROJECTS_DIR=storage_dir / "projects",
+        LOGS_DIR=storage_dir / "logs",
         CINEANCHOR_HOST=_env_text("CINEANCHOR_HOST", "127.0.0.1"),
         CINEANCHOR_PORT=_env_int("CINEANCHOR_PORT", 8000),
     )

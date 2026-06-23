@@ -32,14 +32,19 @@ See `docs/spike_results.md` for detailed validation results.
 
 ## V0.1 Backend Foundation
 
-V0.1 official development has started. The current goal is the formal backend
-foundation: config handling, Project JSON schema, error model, in-memory task
-acceptance, and the minimum render API contract.
+V0.1 official development has started. The backend foundation is complete:
+- Formal Project JSON schema with Pydantic v2 validation
+- FastAPI app with `/health`, `POST /api/render`, `GET /api/render/{task_id}/status`, `GET /api/render/{task_id}/download`
+- Blender headless render execution via `blender/scripts/render_project.py`
+- FFmpeg MP4 composition (H.264, yuv420p, CRF 18)
+- CineAnchorError exception hierarchy with 11 error codes
+- In-memory task store with threading (no database dependency)
+- Config via environment variables + `server/config.py`
 
-The core V0.1 value remains:
+The core V0.1 value:
 
 ```text
-Web -> FastAPI -> Project JSON -> Blender Eevee -> FFmpeg -> MP4
+Web → FastAPI → Project JSON → Blender Eevee → FFmpeg → MP4
 ```
 
 Route 3 AI enhancement is PARTIAL and optional. `ai_enhance.enabled` defaults to
@@ -48,13 +53,28 @@ Route 3 AI enhancement is PARTIAL and optional. `ai_enhance.enabled` defaults to
 Run backend checks:
 
 ```powershell
-.\.venv\Scripts\python.exe -m py_compile server\main.py server\config.py server\routes\render.py server\services\errors.py server\schemas\project.py
+.\.venv\Scripts\python.exe -m py_compile server\main.py server\config.py server\routes\render.py server\services\errors.py server\schemas\project.py server\services\blender_service.py server\services\ffmpeg_service.py server\services\task_queue.py blender\scripts\render_project.py
 .\.venv\Scripts\python.exe -m unittest discover -s tests\backend
 .\.venv\Scripts\python.exe -m unittest discover -s tests\smoke
+.\.venv\Scripts\python.exe -m unittest discover -s tests
 git diff --check
 ```
 
-## Route 4 Local Web Spike
+## Run V0.1 Formal Server
+
+Configure local tool paths, then run the formal V0.1 backend:
+
+```powershell
+$env:BLENDER_PATH="C:\Program Files\Blender Foundation\Blender 5.1\blender.exe"
+$env:FFMPEG_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffmpeg.exe"
+.\.venv\Scripts\python.exe -m uvicorn server.main:app --host 127.0.0.1 --port 8000
+```
+
+POST formal Project JSON to `http://127.0.0.1:8000/api/render`, then poll
+`/api/render/{task_id}/status`. When status is `DONE`, download from
+`/api/render/{task_id}/download`.
+
+## Route 4 Local Web Spike (Legacy)
 
 Install the local web spike dependencies:
 

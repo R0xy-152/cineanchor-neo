@@ -1,7 +1,8 @@
 # CineAnchor V0.1 API Contract
 
-This contract covers the Phase A backend foundation. The API accepts and
-validates formal Project JSON but does not need to execute Blender rendering yet.
+This contract covers the V0.1 backend with render execution. The API validates
+formal Project JSON and executes Blender + FFmpeg rendering to produce
+downloadable MP4 files.
 
 ## Health
 
@@ -21,14 +22,14 @@ Response:
 
 Request body: formal Project JSON as documented in `docs/project_json_schema.md`.
 
-Phase A behavior:
+Behavior:
 
 - validates Project JSON with Pydantic
 - rejects invalid templates and invalid asset/template combinations
 - creates an in-memory task
-- returns `PENDING`
-- does not call Blender yet
-- does not call ComfyUI
+- returns `PENDING` immediately
+- starts a background thread that executes Blender → FFmpeg → DONE
+- does not call ComfyUI (standard path)
 - does not require a database
 
 Success response:
@@ -76,23 +77,35 @@ Task status values:
 | `PENDING` | Task accepted and waiting. |
 | `RENDERING` | Blender render is running. |
 | `COMPOSITING` | FFmpeg composition is running. |
-| `ENHANCING` | Optional AI enhancement is running. Only valid when `ai_enhance.enabled=true`. |
-| `DONE` | MP4 output is ready. |
+| `ENHANCING` | Optional AI enhancement. Defined in schema but not entered in V0.1 — `ai_enhance.enabled=true` is logged as a warning and standard MP4 is returned. |
+| `DONE` | MP4 output is ready. `output_path` is set. |
 | `FAILED` | Task failed and exposes `error_code` plus `message`. |
 
-Default standard path:
+Standard path:
 
 ```text
-PENDING -> RENDERING -> COMPOSITING -> DONE
+PENDING → RENDERING → COMPOSITING → DONE
 ```
+
+On failure at any step:
+
+```text
+→ FAILED (with error_code and message)
+```
+
+If `ai_enhance.enabled=true`: a warning is logged and the standard path
+completes to DONE without AI enhancement. The render is not failed.
 
 ## Download
 
 `GET /api/render/{task_id}/download`
 
-The endpoint is reserved for the render execution phase. During Phase A it
-returns a readable `OUTPUT_NOT_READY` error unless a future render service marks
-the in-memory task as `DONE`.
+Behavior:
+
+- Task not found → HTTP 404, `TASK_NOT_FOUND`
+- Task exists but status is not DONE → HTTP 409, `OUTPUT_NOT_READY`
+- Task is DONE but output file missing → HTTP 404, `OUTPUT_NOT_FOUND`
+- Task is DONE with output file present → HTTP 200, `video/mp4` FileResponse
 
 ## Error Model
 
@@ -108,14 +121,17 @@ All application errors use this shape:
 
 Required V0.1 error codes:
 
-- `ASSET_NOT_FOUND`
-- `INVALID_PROJECT_JSON`
-- `ASSET_IMPORT_FAILED`
-- `UNSUPPORTED_TEMPLATE`
-- `BLENDER_RENDER_FAILED`
-- `FFMPEG_COMPOSE_FAILED`
-- `COMFY_ENHANCE_FAILED`
-- `RENDER_TIMEOUT`
+- `ASSET_NOT_FOUND` — asset path in Project JSON does not exist on disk
+- `INVALID_PROJECT_JSON` — Pydantic validation failure
+- `ASSET_IMPORT_FAILED` — Blender could not load the asset (reserved)
+- `UNSUPPORTED_TEMPLATE` — template not recognized (reserved)
+- `BLENDER_RENDER_FAILED` — Blender subprocess exited non-zero or not found
+- `FFMPEG_COMPOSE_FAILED` — FFmpeg subprocess exited non-zero or not found
+- `COMFY_ENHANCE_FAILED` — reserved for future optional enhancement (must not fail standard path)
+- `RENDER_TIMEOUT` — Blender render exceeded 900s timeout
+- `TASK_NOT_FOUND` — task ID not found in the in-memory store
+- `OUTPUT_NOT_READY` — download attempted before task reached DONE
+- `OUTPUT_NOT_FOUND` — task is DONE but MP4 file is missing on disk
 
 `COMFY_ENHANCE_FAILED` is reserved for a future optional enhancement path. It
 must be treated as a warning/fallback condition and must not fail the standard

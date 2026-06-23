@@ -29,6 +29,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(settings.RENDERS_DIR, Path(settings.STORAGE_DIR) / "renders")
         self.assertEqual(settings.EXPORTS_DIR, Path(settings.STORAGE_DIR) / "exports")
         self.assertEqual(settings.PROJECTS_DIR, Path(settings.STORAGE_DIR) / "projects")
+        self.assertEqual(settings.LOGS_DIR, Path(settings.STORAGE_DIR) / "logs")
         self.assertEqual(settings.CINEANCHOR_HOST, "0.0.0.0")
         self.assertEqual(settings.CINEANCHOR_PORT, 8123)
 
