@@ -24,7 +24,7 @@ CineAnchor helps mobile game and indie game operators create promotional short v
 - [x] Route 0: 3D Render Loop
 - [x] Route 1: PNG 2.5D Video
 - [x] Route 2: JSON-Driven Template Rendering
-- [ ] Route 3: ComfyUI AI Enhancement
+- [ ] Route 3: ComfyUI AI Enhancement (scripted; blocked until ComfyUI API is reachable)
 - [x] Route 4: Web To Local Render Chain
 
 See `docs/spike_results.md` for detailed validation results.
@@ -55,6 +55,19 @@ $env:BLENDER_PATH="C:\Program Files\Blender Foundation\Blender 5.1\blender.exe"
 $env:FFMPEG_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffmpeg.exe"
 .\.venv\Scripts\python.exe server\smoke_web_chain.py
 ```
+
+## Route 3 ComfyUI Keyframe Spike
+
+This spike is isolated from the Web/FastAPI render chain. It extracts 4 keyframes from existing MP4 outputs, sends them to ComfyUI, and creates side-by-side comparison images.
+
+```powershell
+$env:COMFYUI_URL="http://127.0.0.1:8188"
+$env:FFMPEG_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffmpeg.exe"
+$env:FFPROBE_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffprobe.exe"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\spikes\comfy_enhance\run_spike.ps1
+```
+
+Current Route 3 run status: ComfyUI API was not reachable at `http://127.0.0.1:8188`, so enhanced frames and comparisons were not produced yet.
 
 ## Development
 

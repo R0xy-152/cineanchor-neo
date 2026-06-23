@@ -66,3 +66,32 @@ Known risks:
 - Runtime sample assets and generated outputs are ignored by Git and must exist locally.
 - `BLENDER_PATH` and `FFMPEG_PATH` must be configured per machine.
 - The current Project JSON remains provisional Spike schema.
+
+## Route 3: ComfyUI Keyframe Enhancement
+
+Status: FAIL for this run, blocked by ComfyUI API availability.
+
+Goal question: Can ComfyUI improve Blender output without subject deformation, text corruption, or severe flicker?
+
+Conclusion: FAIL for the current run. The isolated keyframe extraction and ComfyUI API client scripts were created, and 4 keyframes per input video were extracted successfully. The ComfyUI API at `http://127.0.0.1:8188` was not reachable, so no enhanced frames or side-by-side comparisons could be generated.
+
+| Field | Result |
+|---|---|
+| Commands run | Created `spike/comfy-keyframe-enhance`; checked ComfyUI reachability; extracted keyframes with FFmpeg; ran ComfyUI API client; ran comparison script as a safe no-op; compiled Python script. |
+| Input assets | `spikes/render_json/output/web/5e056af9c3294a8c8f91954e9a47b58f/final.mp4`, `spikes/render_json/output/web/73f8c80da1394e2bacb4cc4d3f0d4fc1/final.mp4` |
+| Output artifacts | Raw keyframes under `spikes/comfy_enhance/output/*/keyframes_raw/`; `spikes/comfy_enhance/output/keyframes_manifest.json`; `spikes/comfy_enhance/output/comfy_run_report.json` |
+| ComfyUI URL | `http://127.0.0.1:8188` |
+| Workflow | `spikes/comfy_enhance/workflows/conservative_sdxl_img2img_api.json` |
+| Model / checkpoint notes | Local checkpoint files were observed under `D:\ComfyUI\models\checkpoints\`, including `RealVisXL_V5.0_Lightning_fp16.safetensors`, but the API did not expose model info because it was offline. |
+| Per-frame processing time | Not available; no ComfyUI frames processed. |
+| Machine / GPU notes | NVIDIA GeForce RTX 5070 Ti, 16303 MB VRAM; about 1901 MB used before the failed ComfyUI check. |
+| Pass / Fail | FAIL for this run |
+| Blocking errors | ComfyUI API connection refused at `http://127.0.0.1:8188`. |
+| Next decision | Start ComfyUI or provide a reachable `COMFYUI_URL`, then rerun `spikes/comfy_enhance/run_spike.ps1` and manually review enhanced keyframes. |
+
+Known risks:
+
+- ComfyUI is not yet a managed environment dependency for the project.
+- The current workspace `.venv` does not contain ComfyUI runtime dependencies such as `torch` and `aiohttp`.
+- Low-denoise SDXL img2img can still alter text or subject details; manual side-by-side review remains required.
+- This spike intentionally processes keyframes only, not all video frames.
