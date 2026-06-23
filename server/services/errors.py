@@ -18,6 +18,7 @@ class ErrorCode(str, Enum):
     OUTPUT_NOT_READY = "OUTPUT_NOT_READY"
     OUTPUT_NOT_FOUND = "OUTPUT_NOT_FOUND"
     AI_ENHANCE_SKIPPED = "AI_ENHANCE_SKIPPED"
+    UNSUPPORTED_ASSET_FORMAT = "UNSUPPORTED_ASSET_FORMAT"
 
 
 DEFAULT_MESSAGES: dict[ErrorCode, str] = {
@@ -33,6 +34,9 @@ DEFAULT_MESSAGES: dict[ErrorCode, str] = {
     ErrorCode.OUTPUT_NOT_READY: "Output is not ready",
     ErrorCode.OUTPUT_NOT_FOUND: "Output file was not found",
     ErrorCode.AI_ENHANCE_SKIPPED: "AI enhancement was skipped, standard output returned",
+    ErrorCode.UNSUPPORTED_ASSET_FORMAT: (
+        "不支持的素材格式。character_intro 只支持 PNG，product_orbit 只支持 GLB。"
+    ),
 }
 
 

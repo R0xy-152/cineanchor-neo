@@ -76,6 +76,36 @@ POST formal Project JSON to `http://127.0.0.1:8000/api/render`, then poll
 `/api/render/{task_id}/status`. When status is `DONE`, download from
 `/api/render/{task_id}/download`.
 
+## Web UI
+
+Start the server (see above), then open `http://127.0.0.1:8000/web/`.
+
+### Supported Templates
+
+| Template | Asset | Camera | Description |
+|---|---|---|---|
+| character_intro | PNG (transparent) | dolly_in | Character entrance with title overlay |
+| product_orbit | GLB (3D model) | orbit | Product showcase with 360° rotation |
+
+### Render Modes
+
+| Mode | ai_enhance | Description |
+|---|---|---|
+| 快速版 (default) | enabled=false | Standard Blender Eevee + FFmpeg |
+| 精品版 | enabled=true | Adds conservative FFmpeg eq+unsharp filter |
+
+精品版 is a light post-processing preset. It does not use ComfyUI. If
+enhancement fails, the standard MP4 is returned with a warning.
+
+### Current Limitations
+
+- subject_scale is not supported (V0.2)
+- No GLB decimation — large models may render slowly
+- No automatic background removal for non-transparent PNGs
+- 1:1 aspect ratio not exposed in UI (supported by backend)
+- No BGM upload
+- No real-time 3D preview
+
 ## Route 4 Local Web Spike (Legacy)
 
 Install the local web spike dependencies:

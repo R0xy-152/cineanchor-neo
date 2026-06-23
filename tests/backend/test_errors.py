@@ -20,6 +20,7 @@ class ErrorCodeTests(unittest.TestCase):
             "OUTPUT_NOT_READY",
             "OUTPUT_NOT_FOUND",
             "AI_ENHANCE_SKIPPED",
+            "UNSUPPORTED_ASSET_FORMAT",
         }
         self.assertTrue(required.issubset({code.value for code in ErrorCode}))
 

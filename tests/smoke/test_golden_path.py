@@ -268,5 +268,37 @@ class GoldenPathSmokeTests(unittest.TestCase):
             self.assertIn(key, snap)
 
 
+    # ── web serving ────────────────────────────────────────────────
+
+    def test_web_index_is_served(self) -> None:
+        """GET /web/ should return the static HTML page."""
+        import asyncio
+
+        scope = {
+            "type": "http",
+            "asgi": {"version": "3.0", "spec_version": "2.3"},
+            "http_version": "1.1",
+            "method": "GET",
+            "scheme": "http",
+            "path": "/web/",
+            "raw_path": b"/web/",
+            "query_string": b"",
+            "headers": [(b"host", b"testserver")],
+            "client": ("127.0.0.1", 12345),
+            "server": ("testserver", 80),
+        }
+        messages: list[dict] = []
+
+        async def receive() -> dict:
+            return {"type": "http.request", "body": b"", "more_body": False}
+
+        async def send(message: dict) -> None:
+            messages.append(message)
+
+        asyncio.run(app(scope, receive, send))
+        start = next(m for m in messages if m["type"] == "http.response.start")
+        self.assertEqual(start["status"], 200)
+
+
 if __name__ == "__main__":
     unittest.main()

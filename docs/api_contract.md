@@ -147,6 +147,7 @@ Required V0.1 error codes:
 - `OUTPUT_NOT_READY` — download attempted before task reached DONE
 - `OUTPUT_NOT_FOUND` — task is DONE but MP4 file is missing on disk
 - `AI_ENHANCE_SKIPPED` — enhancement failed, standard MP4 returned (warning, not error)
+- `UNSUPPORTED_ASSET_FORMAT` — uploaded file format is not PNG or GLB
 
 `COMFY_ENHANCE_FAILED` is reserved for a future optional enhancement path. It
 must be treated as a warning/fallback condition and must not fail the standard
@@ -164,3 +165,54 @@ color-reference analysis.
 - If enhancement fails for any reason, the task still reaches `DONE` with
   `warning_code=AI_ENHANCE_SKIPPED` and the standard MP4 is returned.
 - ComfyUI is **not** part of the V0.1 enhancement path; it is a future hook only.
+
+## Asset Upload
+
+`POST /api/assets/upload`
+
+Request: `multipart/form-data` with a single `file` field.
+
+The endpoint identifies the asset type by file extension:
+- `.png` → `image`
+- `.glb` → `glb`
+
+Success response:
+
+```json
+{
+  "asset_id": "a1b2c3d4e5f6",
+  "path": "assets/a1b2c3d4e5f6/hero.png",
+  "type": "image",
+  "filename": "hero.png"
+}
+```
+
+Error response (unsupported format):
+
+```json
+{
+  "error_code": "UNSUPPORTED_ASSET_FORMAT",
+  "message": "不支持的素材格式。",
+  "detail": "File extension is not supported: file.txt. Supported formats: PNG, GLB."
+}
+```
+
+Note: The upload endpoint does **not** validate template/asset-type coupling
+(e.g., character_intro requires PNG). That validation is performed by
+`POST /api/render` via the ProjectJSON schema validator.
+
+## Web UI
+
+The frontend is served by the same FastAPI process at `/web/`. Start the
+server and open `http://127.0.0.1:8000/web/`.
+
+### Render Flow (from the frontend perspective)
+
+1. User selects template (character_intro or product_orbit)
+2. User uploads an asset (PNG for character_intro, GLB for product_orbit)
+3. User sets title, subtitle, and aspect ratio (9:16 / 16:9)
+4. User chooses render mode: 快速版 (standard) or 精品版 (mild enhancement)
+5. Frontend builds formal V0.1 Project JSON and POSTs to `/api/render`
+6. Frontend polls `GET /api/render/{task_id}/status` every 3s (first 30s) then 10s
+7. When status is DONE, frontend shows download button pointing to `/api/render/{task_id}/download`
+8. If warning_code is set, a non-blocking warning banner is shown
