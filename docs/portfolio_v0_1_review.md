@@ -28,6 +28,15 @@ The tag points to commit `4a5565c02a43b02ec28456cd1f01264abde2d952`.
 - Release hygiene: runtime outputs remain ignored under `storage/` and spike output folders.
 - Remaining local cleanup before promotion: make sure the worktree has no unrelated untracked files.
 
+## CineAnchor V0.1.0
+
+- Web → FastAPI → Project JSON → Blender Eevee → FFmpeg → MP4 主链路完成
+- 支持 PNG `character_intro` 与 GLB `product_orbit`
+- 支持快速版与轻度后期精品 preset
+- AI 美化不作为核心卖点，ComfyUI 不进入标准链路
+- 提供 `check_env`、`run_tests`、`golden_smoke`、`clean_runtime` 脚本
+- 49 tests + golden smoke 通过
+
 ## V0.1 Feature Boundary
 
 ### What V0.1 Does
