@@ -41,3 +41,15 @@ If you don't have sample assets, you can still:
 
 - Run unit tests: `scripts\run_tests.bat` (no assets required)
 - Start the server and upload your own files through the Web UI
+
+For release smoke verification, `scripts\golden_smoke.py` also accepts explicit
+asset paths:
+
+```powershell
+$env:CINEANCHOR_SMOKE_URL="http://127.0.0.1:8000"
+$env:CINEANCHOR_SAMPLE_PNG="E:\path\to\hero.png"
+$env:CINEANCHOR_SAMPLE_GLB="E:\path\to\model.glb"
+.\.venv\Scripts\python.exe scripts\golden_smoke.py
+```
+
+The script prints clear `SKIP` messages when sample assets are missing.

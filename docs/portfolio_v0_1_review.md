@@ -17,6 +17,17 @@ TikTok / Xiaohongshu / Steam.
 | Route 3 | ComfyUI AI enhancement | **PARTIAL** — Direct img2img failed (text corruption); conservative FFmpeg enhancement works but lift is mild |
 | Route 4 | Web → FastAPI → Blender → MP4 | **PASS** — Full chain: upload → render → poll → download |
 
+## V0.1 RC Acceptance Check (2026-06-24)
+
+`v0.1-rc` was verified on Windows 11 with Blender 5.1.2 and FFmpeg 8.1.1.
+The tag points to commit `4a5565c02a43b02ec28456cd1f01264abde2d952`.
+
+- Environment check: pass when `BLENDER_PATH` and `FFMPEG_PATH` are set to the local Blender and bundled FFmpeg paths.
+- Tests: `scripts\run_tests.bat` passed 49 tests.
+- Golden smoke: `scripts\golden_smoke.py` passed `character_intro`, `product_orbit`, and premium mode using local PNG/GLB assets; upload, render, poll, download, and ffprobe were covered.
+- Release hygiene: runtime outputs remain ignored under `storage/` and spike output folders.
+- Remaining local cleanup before promotion: make sure the worktree has no unrelated untracked files.
+
 ## V0.1 Feature Boundary
 
 ### What V0.1 Does
