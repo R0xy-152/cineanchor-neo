@@ -56,14 +56,14 @@
 3. 启鸣 reviews on `Andy` branch → approve / revise
 3b. On approval, Andy runs the ADR evaluation (see §8); if triggered, drafts a new ADR
 4. Claude Code reads approved doc → PLAN MODE → writes plan
-5. Double-review gate: 启鸣 reviews plan AND Andy reviews plan
-6. Both pass → CC executes on spike/* or feature/*
+5. Plan review gate: Andy reviews the plan (启鸣 does NOT review plans — once requirements are approved, plan is Andy's to vet)
+6. Andy passes → CC executes on spike/* or feature/*
 7. If output is video: CC renders locally, outputs the test video FILE PATH
 8. 启鸣 reviews the video (only a human accepts video)
 9. CC opens PR → 启鸣 merges to main
 ```
 
-- **No step skipped.** Plan-mode and the double-review gate are mandatory before code is written.
+- **No step skipped.** Plan-mode and Andy's plan review are mandatory before code is written. 启鸣 reviews requirements and the final video, not the plan.
 - **Keep it light during Spike:** a plan can be a few bullets; smoke checks over full TDD.
 
 ---
