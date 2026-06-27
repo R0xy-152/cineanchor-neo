@@ -53,6 +53,7 @@
 1. 启鸣 states a need
 2. Andy clarifies, writes requirements + acceptance criteria → `Andy` branch
 3. 启鸣 reviews on `Andy` branch → approve / revise
+3b. On approval, Andy runs the ADR evaluation (see §8); if triggered, drafts a new ADR
 4. Claude Code reads approved doc → PLAN MODE → writes plan
 5. Double-review gate: 启鸣 reviews plan AND Andy reviews plan
 6. Both pass → CC executes on spike/* or feature/*
@@ -106,6 +107,22 @@ The `Andy` branch holds only review / handoff markdown docs. Naming rule:
 - **Requirements / acceptance docs (for 启鸣 to review) → Chinese.** These are human-decision documents; Chinese lowers reading cost.
 - **Plan / execution / technical docs (codemap, rules, ADR consumed by Claude Code) → English.** Agent/execution-facing; English is more token-efficient and consistent with the code.
 - **Quick reference:** `*-requirements.md` = 中文; `*-plan.md`, `00-*` rules, `docs/*` technical = English.
+
+---
+
+## 8. ADR evaluation after requirements approval
+
+Every time a `requirements` doc is approved, Andy MUST run this evaluation before handing off to Claude Code:
+
+1. **Does this requirement involve a product decision?** (e.g. choosing a tech route, changing the JSON schema/contract, adding/dropping a capability, a trade-off with lasting consequences — not a pure chore or doc edit.)
+2. **Is it worth persisting into `docs/adr/`?** (i.e. future-you would ask "why did we decide this?" — not a throwaway Spike experiment.)
+
+**If BOTH are true → draft a new ADR.**
+- Continue numbering from the existing local set (latest is `ADR-004`), so the next is `ADR-005-<slug>.md`.
+- ADR body: context · decision · alternatives considered · consequences · status (proposed/accepted/superseded).
+- Authoring path: Andy drafts the ADR markdown on the `Andy` branch; it lands in `docs/adr/` via the normal Claude Code → PR → 启鸣 merge flow (Andy never writes `docs/` directly).
+
+**If either is false → skip; record nothing.** Most chores, doc-only changes, and disposable Spike probes will not trigger an ADR.
 
 ---
 
