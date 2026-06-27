@@ -2,6 +2,7 @@
 
 > Author: Andy · Status: DRAFT for 启鸣 confirmation
 > Binding ruleset for the CineAnchor Neo two-agent collaboration. Supersedes ad-hoc conventions.
+> Note: Phase 0 security & guardrails (token hardening, main-branch protection) are out of scope per 启鸣's decision (2026-06-27).
 
 ---
 
@@ -28,7 +29,7 @@
 | `docs/*` | Documentation / portfolio | CC or Andy | via PR |
 
 - **Naming:** use `-` separators, never `/` inside a segment beyond the prefix (Docker-tag safety).
-- **Andy is hard-limited to the `Andy` branch.** This is convention; the real wall is `main` protection.
+- **Andy writes only to the `Andy` branch.** This is a followed convention (no hard enforcement, since main protection is out of scope).
 
 ---
 
@@ -40,9 +41,9 @@
 4. **Read before write.** Read the full current file before modifying; make targeted edits, never blind full-file overwrites.
 5. **Verify after write.** Re-fetch the file / check the diff after pushing; if deletions vastly exceed additions, stop and flag.
 6. **Commit / MR naming:** `type(scope): short description`. Andy's commits/MRs are prefixed `[Andy]`.
-   - Examples: `[Andy] docs: add requirements.md`, `feat(render): add dolly_out camera`.
-7. **No force-push to shared branches.** Never force-push `main`. Force-push only your own throwaway branch, never another agent's.
-8. **No editing branch protection or merge config** to bypass a rule. If blocked, escalate to 启鸣.
+   - Examples: `[Andy] docs: add requirements`, `feat(render): add dolly_out camera`.
+7. **No force-push to shared branches.** Force-push only your own throwaway branch, never another agent's.
+8. **Don't bypass agreed rules.** If blocked by a rule, escalate to 启鸣 rather than working around it.
 
 ---
 
@@ -70,19 +71,45 @@
 - **Deletion:** confirm intent before deleting anything. Shared/others' resources need explicit 启鸣 approval.
 - **Scope discipline:** do only what the approved doc specifies. No out-of-scope "improvements" (see `docs/scope.md` once it exists).
 - **Code safety:** read full file → targeted edit → verify diff → never delete functional code unasked.
-- **Secrets:** never commit tokens/credentials. If a secret is exposed (e.g. token in chat), flag immediately and require rotation.
+- **Secrets:** never commit tokens / credentials into any file.
 
 ---
 
-## 6. Token & access
+## 6. File naming (Andy branch)
 
-- Andy uses a fine-grained PAT scoped to `cineanchor-neo`, Contents R/W only, with expiry.
-- The token cannot restrict which branch it writes — branch safety comes from `main` protection, not the token.
-- Rotate the token on any exposure. Andy's writes are confined to the `Andy` branch by convention + reviewed by 启鸣.
+The `Andy` branch holds only review / handoff markdown docs. Naming rule:
+
+**Standing docs (cross-loop governance):**
+```
+00-<name>.md
+```
+- `00-` prefix sorts them to the top; names are stable.
+- Example: `00-workflow-rules.md`
+
+**Per requirement loop:**
+```
+<NN>-<slug>-<type>.md
+```
+- `NN` = two-digit zero-padded loop sequence (`01`, `02`, …; widen all numbers together when exceeding 99).
+- `slug` = concise kebab-case topic.
+- `type` = `requirements` | `plan` | `review` | `acceptance` (vocabulary is extensible).
+- Examples: `01-workflow-setup-requirements.md`, `01-workflow-setup-plan.md`
+
+**Why this scheme:**
+- *Readability:* the numeric prefix groups all files of one loop together when sorted; the `type` suffix shows a file's purpose at a glance.
+- *Extensibility:* new loops just increment the number; new document kinds extend the `type` vocabulary; if a loop ever accumulates many files, it upgrades cleanly to a sub-folder form `NN-<slug>/<type>.md` without breaking the convention.
+
+---
+
+## 7. Language (CN / EN)
+
+- **Requirements / acceptance docs (for 启鸣 to review) → Chinese.** These are human-decision documents; Chinese lowers reading cost.
+- **Plan / execution / technical docs (codemap, rules, ADR consumed by Claude Code) → English.** Agent/execution-facing; English is more token-efficient and consistent with the code.
+- **Quick reference:** `*-requirements.md` = 中文; `*-plan.md`, `00-*` rules, `docs/*` technical = English.
 
 ---
 
 ## Confirmation requested
 
 1. Adopt this as the binding ruleset?
-2. Any rule to tighten/loosen (esp. branch table and Andy's markdown-only limit)?
+2. Any rule to tighten/loosen (esp. branch table, Andy's markdown-only limit, the naming scheme)?
