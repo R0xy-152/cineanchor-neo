@@ -45,3 +45,14 @@ Constraint: background enhancement must not overpower the subject — the weapon
 - Landing order: background deterministic enhancement first (small change, low risk, immediate effect) → particle Method A → Method B only if A's look fails the bar → no AI introduced at any point.
 - Acceptance is governed by the 8-criterion table in `03-particle-background-requirements.md` (camera unchanged, frame consistency, no distortion, ember look, color consistency, background layering, debuggability without 3D re-render, local video output per the workflow rules). Final video acceptance remains a human (启鸣) decision.
 - Consistent with `ADR-005` (AI confined to non-core polish) and `ADR-004` (no full-frame AI regeneration); this ADR extends that boundary to two specific elements (particles, background) without altering the route ordering.
+
+## 2026-06-27 Update — Ember color-consistency clarified, and a visibility guard added
+
+First execution (loop `03`) shipped but failed human acceptance: the ember overlay asset (`embers_default.mp4`) rendered pure black (embers invisible — screen-blending a black layer adds nothing), and the final composite read as "a filter over the subject" because the auto-derived ember color collapsed everything into one flat tone. The automated suite (58/58) passed while the actual visual deliverable was empty — code paths were tested, but not "does the layer contain visible embers."
+
+This is an execution-correction loop (`04-particle-visibility-fix-requirements.md`), not a new method decision, so it is recorded here as a dated update rather than a new ADR. Two clarifications to the original Decision:
+
+1. **Ember color-consistency refined (amends acceptance criterion #5).** "Ember color consistent with the weapon's style color" must NOT be taken as "identical color." Embers share the weapon's **hue family** but must be high-luminance / high-saturation and contrast against the subject, reading as discrete bright sparks — never collapsing the frame into a single flat tinted layer. Color-consistency ≠ washed-out monochrome.
+2. **Visibility guard is now part of the deterministic-compositing contract.** Because a black/empty overlay can pass code-level tests silently, generation of any overlay asset must include an automated non-black / luminance self-check that FAILS generation when the layer is black or near-black. A green test suite is not sufficient evidence that the visual deliverable exists.
+
+The Method A → B escalation gate is reaffirmed: a black ember layer is a Method-A generation defect to fix within A, not a trigger to jump to B. Escalate to B only if embers are visible but still cannot reach "ember trail becomes a light streak" realism.
