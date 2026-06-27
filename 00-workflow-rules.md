@@ -23,13 +23,14 @@
 | Branch | Purpose | Who writes | Merge into main |
 |--------|---------|-----------|-----------------|
 | `main` | Stable only | nobody directly | via PR, 启鸣 merges |
-| `Andy` | Andy's requirement/plan/review docs only | Andy | never auto; cherry-pick if needed |
+| `Andy` | Andy's requirement/plan/review docs + ADR management under `docs/adr/` | Andy | never auto; cherry-pick if needed |
 | `spike/*` | Spike validation code (disposable) | CC | only if promoted, via PR |
 | `feature/*` | Product feature work (post-Spike) | CC | via PR |
 | `docs/*` | Documentation / portfolio | CC or Andy | via PR |
 
 - **Naming:** use `-` separators, never `/` inside a segment beyond the prefix (Docker-tag safety).
 - **Andy writes only to the `Andy` branch.** This is a followed convention (no hard enforcement, since main protection is out of scope).
+- **ADR ownership:** Andy manages ADRs directly on the `Andy` branch under `docs/adr/`. This is the one code-tree area Andy maintains (the `docs/adr/` set was synced here by Claude Code for this purpose). Andy still does not write other `docs/` files or any source code.
 
 ---
 
@@ -120,7 +121,7 @@ Every time a `requirements` doc is approved, Andy MUST run this evaluation befor
 **If BOTH are true → draft a new ADR.**
 - Continue numbering from the existing local set (latest is `ADR-004`), so the next is `ADR-005-<slug>.md`.
 - ADR body: context · decision · alternatives considered · consequences · status (proposed/accepted/superseded).
-- Authoring path: Andy drafts the ADR markdown on the `Andy` branch; it lands in `docs/adr/` via the normal Claude Code → PR → 启鸣 merge flow (Andy never writes `docs/` directly).
+- Authoring path: Andy writes the ADR markdown directly into `docs/adr/` on the `Andy` branch (Andy owns the ADR set here). 启鸣 reviews on the `Andy` branch; promotion to `main` still goes through the normal PR → 启鸣 merge flow.
 
 **If either is false → skip; record nothing.** Most chores, doc-only changes, and disposable Spike probes will not trigger an ADR.
 
