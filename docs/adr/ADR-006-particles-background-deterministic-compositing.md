@@ -60,3 +60,12 @@ The Method A → B escalation gate is reaffirmed: a black ember layer is a Metho
 ## 2026-06-29 Amendment — superseded in part by ADR-007 (bounded AI sparks)
 
 Loop `04` made embers visible and passed the automated bar, but failed 启鸣's *aesthetic* bar: deterministic sparks reach a correct-but-not-cinematic ceiling. Spike `05` (2b) then validated a bounded AI route — a deterministic, text-free, particle-free Blender base fed to Seedance (video-to-video), with AI confined to sparks/atmosphere and text re-composited deterministically. Human acceptance (2026-06-29): better look, **no flicker, no subject drift**. As a result, **the spark/atmosphere aesthetic layer is now governed by `ADR-007`**, which carves a bounded exception to this ADR's "AI rejected for particles" stance. Everything structural in this ADR still stands, and the deterministic particle Methods A/B above are **retained as the fallback** for when Seedance is unavailable or underperforms on a given asset. See `ADR-007` for the pipeline and boundaries.
+
+## 2026-06-29 Update — PERSP camera introduced on the preset path (Loop 07), ORTHO remains the no-distortion default
+
+Loop `07` (camera trajectory engine) migrated a pure-python interpolation engine (Catmull-Rom position + SLERP orientation) plus 8 cinematic presets onto route ①, accepted by 启鸣 on 2026-06-29. Two camera-projection points are recorded here as a dated update (not a new ADR — this is an engine migration, not a method-level decision):
+
+1. **ORTHO stays the default and keeps its no-distortion guarantee.** The default render path (no preset / `preset=null`) is unchanged: acceptance gate ADJ-2 confirmed **24/24 bit-identical** frames (PSNR=∞) on both `dolly_in` and `orbit`. Deterministic structure, no subject distortion — the four-hard-criteria default is intact.
+2. **PERSP is now allowed, confined to the preset branch.** Cinematic presets may use perspective projection to buy filmic depth; ADJ-4 verified ≥3 presets (nolan_orbit / dolly_reveal / drone_ascend) render with subject in-frame, motion present, **no subject distortion/breakdown**. PERSP is currently **demo-only** (presets are demos, not a productized feature) and does not touch the deterministic particle/background contract above.
+
+**Carry-forward:** PERSP × text-overlay positioning (FOV→view_height) was NOT exercised this loop (`title=""`); it is pinned for the interactive-control / real-output loop (loop 08) when presets are productized. ORTHO + deterministic text remain the published path until then.

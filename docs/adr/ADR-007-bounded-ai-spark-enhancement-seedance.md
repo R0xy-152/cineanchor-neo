@@ -53,3 +53,7 @@ The single most-feared risks of the AI route — spark flicker and subject drift
 ## Acceptance evidence reference
 
 `05-seedance-spike-requirements.md` §五 acceptance table — all six met (2026-06-29, 启鸣). Spark frame consistency (#5) and subject no-drift (#3) — the two highest-risk criteria — explicitly confirmed.
+
+## 2026-06-29 Update — Generality confirmed (Loop 06)
+
+Loop `06` (semi-manual mass production + parameter decoupling) was executed and **accepted by 启鸣 on 2026-06-29**. The 2b pipeline was exercised across **diverse assets and camera moves**, and the two highest-risk failure modes — **spark flicker and subject drift — did NOT recur**. This retires the "Generality is NOT yet proven" caveat in *Consequences* above, which rested on the single Spike-05 asset: 2b is now validated as **general**, not asset/prompt luck. The revert path in *Consequences* remains available should a future asset regress.
