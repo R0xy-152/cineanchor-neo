@@ -43,7 +43,10 @@ Three.js viewport (PERSP preview)
 
 ### Phase 3 — Input controller (locked mapping)
 - Pointer-lock for mouse-look (capture on left-click-into-viewport / a click-to-focus affordance — reconcile with "left = record"; see Risk R4).
-- Mapping: `W/A/S/D`=translate fwd/left/back/right (camera-local), `Space`=up, `Ctrl`=down, `Shift` held = scale **translation** speed down only (mouse-look sensitivity unchanged), mouse move = yaw/pitch, wheel = dolly (forward axis).
+- Mapping: `W/A/S/D`=translate fwd/left/back/right (camera-local), `Space`=up, `Ctrl`=down, mouse move = yaw/pitch, wheel = dolly (forward axis).
+- **Speed = continuous ramp, not fixed multiplier.** `Shift` held → translation speed ramps **down** continuously; `Tab` held → ramps **up**; release **persists** the current speed (the "调到满意松手即定速" model). Clamp `[0.1, 5.0]` (min > 0 to avoid lockup, max to avoid fly-off). Affects **translation only** — mouse-look sensitivity unchanged. Ramp rates are tunable (CC's build uses Shift −0.4/s, Tab/Alt +0.8/s — keep configurable).
+- **Accelerate key = `Tab`, fallback `Alt`.** Tab's default focus-change MUST be suppressed while a speed key is active; if Tab proves unreliable cross-browser, switch to `Alt` (suppress its menu-focus grab too). R4 below.
+- **Speed feedback:** preview reflects speed in real time; on-screen speed HUD (numeric + bar, auto-hide ~2s idle) so the user always knows current speed. Speed changes during recording are captured into the take.
 - Frame-rate-independent movement (delta-time scaled) so recording is smooth regardless of client FPS.
 
 ### Phase 4 — Recorder + fitter + serialize
