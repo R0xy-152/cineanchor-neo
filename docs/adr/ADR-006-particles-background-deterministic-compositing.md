@@ -2,7 +2,7 @@
 
 Date: 2026-06-27
 
-Status: Accepted
+Status: Accepted — spark/atmosphere aesthetic layer subsequently amended by `ADR-007` (2026-06-29); deterministic methods below retained as fallback.
 
 ## Context
 
@@ -56,3 +56,7 @@ This is an execution-correction loop (`04-particle-visibility-fix-requirements.m
 2. **Visibility guard is now part of the deterministic-compositing contract.** Because a black/empty overlay can pass code-level tests silently, generation of any overlay asset must include an automated non-black / luminance self-check that FAILS generation when the layer is black or near-black. A green test suite is not sufficient evidence that the visual deliverable exists.
 
 The Method A → B escalation gate is reaffirmed: a black ember layer is a Method-A generation defect to fix within A, not a trigger to jump to B. Escalate to B only if embers are visible but still cannot reach "ember trail becomes a light streak" realism.
+
+## 2026-06-29 Amendment — superseded in part by ADR-007 (bounded AI sparks)
+
+Loop `04` made embers visible and passed the automated bar, but failed 启鸣's *aesthetic* bar: deterministic sparks reach a correct-but-not-cinematic ceiling. Spike `05` (2b) then validated a bounded AI route — a deterministic, text-free, particle-free Blender base fed to Seedance (video-to-video), with AI confined to sparks/atmosphere and text re-composited deterministically. Human acceptance (2026-06-29): better look, **no flicker, no subject drift**. As a result, **the spark/atmosphere aesthetic layer is now governed by `ADR-007`**, which carves a bounded exception to this ADR's "AI rejected for particles" stance. Everything structural in this ADR still stands, and the deterministic particle Methods A/B above are **retained as the fallback** for when Seedance is unavailable or underperforms on a given asset. See `ADR-007` for the pipeline and boundaries.
