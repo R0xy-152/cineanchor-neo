@@ -114,6 +114,9 @@ function init() {
         speedValueEl: speedValue,
         speedBarFillEl: speedBarFill,
         helpEl,
+        onFovChange: (newFov) => {
+            fovValue.textContent = Math.round(newFov) + '°';
+        },
     });
 
     // Recorder (pass camera accessor to avoid THREE dependency)

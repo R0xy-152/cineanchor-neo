@@ -28,6 +28,7 @@ let currentSpeed = 1.0;
 let isFlying = false;
 let skipNextMouseMove = false;  // guard against Pointer Lock garbage event
 let hudTimer = 0;
+let onFovChange = null;  // callback for FOV HUD updates
 
 // HUD DOM refs (optional — set by viewport)
 let speedValueEl = null;
@@ -54,6 +55,7 @@ export function initInput(cam, cv, opts = {}) {
     speedValueEl = opts.speedValueEl || null;
     speedBarFillEl = opts.speedBarFillEl || null;
     helpEl = opts.helpEl || null;
+    onFovChange = opts.onFovChange || null;
 
     canvas.addEventListener('click', _onCanvasClick);
     document.addEventListener('keydown', _onKeyDown);
@@ -151,14 +153,16 @@ function _onCanvasClick(_e) {
 }
 
 function _onKeyDown(e) {
-    keys[e.code] = true;
+    // Normalize modifier keys: browsers fire separate left/right codes
+    const code = _normalizeKeyCode(e.code);
+    keys[code] = true;
 
     // Prevent browser shortcuts
-    if (e.code === 'Tab') e.preventDefault();
-    if (e.code === 'Space' && isFlying) e.preventDefault();
+    if (code === 'Tab') e.preventDefault();
+    if (code === 'Space' && isFlying) e.preventDefault();
 
     // Exit flight
-    if (e.code === 'Escape') {
+    if (code === 'Escape') {
         document.exitPointerLock();
         isFlying = false;
         canvas.classList.remove('fly');
@@ -166,13 +170,23 @@ function _onKeyDown(e) {
     }
 
     // Speed HUD on any key press
-    if (['Shift', 'Tab', 'Alt'].some(k => e.code === k || e.key === k)) {
+    if (['Shift', 'Tab', 'Alt'].some(k => code === k || e.key === k)) {
         hudTimer = 0;
     }
 }
 
 function _onKeyUp(e) {
-    keys[e.code] = false;
+    keys[_normalizeKeyCode(e.code)] = false;
+}
+
+function _normalizeKeyCode(code) {
+    // Normalize left/right modifier variants to the base code
+    const MAP = {
+        'ShiftLeft': 'Shift', 'ShiftRight': 'Shift',
+        'ControlLeft': 'Control', 'ControlRight': 'Control',
+        'AltLeft': 'Alt', 'AltRight': 'Alt',
+    };
+    return MAP[code] || code;
 }
 
 // Guard: reject spurious mousemove events from pointer-lock engagement.
@@ -235,9 +249,18 @@ function _onMouseMove(e) {
 function _onWheel(e) {
     e.preventDefault();
     if (!isFlying) return;
-    const dollySpeed = currentSpeed * SCROLL_SENSITIVITY;
-    // translateZ(-d) = forward (scroll up = dolly in), translateZ(+d) = backward
-    camera.translateZ(e.deltaY > 0 ? dollySpeed : -dollySpeed);
+    // Scroll wheel changes FOV (lens focal length), not camera position.
+    // Scroll up = zoom in (narrower FOV), scroll down = zoom out (wider FOV).
+    const FOV_SENSITIVITY = 2;  // degrees per scroll notch
+    const MIN_FOV = 5;
+    const MAX_FOV = 120;
+    const newFov = Math.max(MIN_FOV, Math.min(MAX_FOV,
+        camera.fov + (e.deltaY > 0 ? FOV_SENSITIVITY : -FOV_SENSITIVITY)));
+    if (newFov !== camera.fov) {
+        camera.fov = newFov;
+        camera.updateProjectionMatrix();
+        if (onFovChange) onFovChange(newFov);
+    }
 }
 
 // ── Movement: use camera.translateX/Y/Z (Three.js built-in, battle-tested) ──
