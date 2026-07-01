@@ -985,17 +985,46 @@ def _adapt_user_keyframes(
     """Convert Three.js (Y-up) keyframes to Blender (Z-up).
 
     Position: coordinate swap + scene_center offset.
-    Orientation: set to identity — TRACK_TO constraint handles look-at.
+    Orientation: use Blender's built-in Matrix.to_quaternion() to compute
+      look-at rotation — bypasses _quat_from_look which has a trace sign
+      error (R22 negated) and fails when forward ≈ up.
     """
+    import bpy
+    from mathutils import Vector, Matrix
+
     cx, cy, cz = scene_center
     adapted: list[dict] = []
     for kf in kfs:
         tx, ty, tz = kf["pos"]
-        blender_pos = [tx + cx, -tz + cy, ty + cz]
+        blender_pos = Vector((tx + cx, -tz + cy, ty + cz))
+        # Camera looks along -Z in local space
+        fwd = (Vector(scene_center) - blender_pos).normalized()
+
+        # Choose up reference: avoid the forward axis
+        if abs(fwd.z) > 0.99:
+            up_ref = Vector((0, 1, 0))  # use Y when forward ≈ Z
+        else:
+            up_ref = Vector((0, 0, 1))  # default Z-up
+
+        right = fwd.cross(up_ref).normalized()
+        if right.length < 0.001:
+            right = Vector((1, 0, 0))
+        up_actual = right.cross(fwd).normalized()
+        neg_fwd = -fwd  # camera looks along -Z
+
+        # Build rotation matrix: columns = [right, up_actual, -fwd]
+        rot = Matrix((
+            (right.x,   up_actual.x,   neg_fwd.x),
+            (right.y,   up_actual.y,   neg_fwd.y),
+            (right.z,   up_actual.z,   neg_fwd.z),
+        ))
+        quat_vec = rot.to_quaternion()
+        quat = [quat_vec.x, quat_vec.y, quat_vec.z, quat_vec.w]
+
         adapted.append({
             "t": kf["t"],
-            "pos": blender_pos,
-            "quat": [0, 0, 0, 1],  # identity — constraint overrides
+            "pos": list(blender_pos),
+            "quat": quat,
             "fov": kf.get("fov", 55),
         })
     return adapted
@@ -1102,11 +1131,6 @@ def add_keyframed_camera_from_data(
     fps = int(project["output"]["fps"])
     frames = interpolate_keyframes(adapted, fps)
     _camera, view_height = _persp_camera_from_frames(frames, fps, scene)
-
-    # Add TRACK_TO constraint — guarantees camera looks at scene center
-    # (quaternion conversion from Three.js is unreliable)
-    _add_track_to_constraint(_camera, scene_center)
-
     return view_height
 
 
@@ -1146,7 +1170,6 @@ def add_keyframed_camera_from_shots(
         return add_dolly_camera(width, height, project, subject)
 
     _camera, view_height = _persp_camera_from_frames(all_frames, fps, scene)
-    _add_track_to_constraint(_camera, scene_center)
     return view_height
 
 

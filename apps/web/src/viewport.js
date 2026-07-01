@@ -68,8 +68,10 @@ function init() {
     scene.fog = new THREE.Fog(0x030308, 5, 50);
 
     // Camera — PERSP, Blender-matched vertical FOV
+    // Default position matches Blender orbit preset: Three.js (0, 0.5, 7)
+    // converts to Blender (0, -7, 0.5) which frames the model correctly.
     camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, -7, 1.5);
+    camera.position.set(0, 0.5, 7);
     camera.lookAt(SCENE_CENTER);
     camera.updateProjectionMatrix();
 
