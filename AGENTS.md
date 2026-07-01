@@ -2,13 +2,13 @@
 
 ## Project Stage
 
-CineAnchor Neo is currently in **V0.1 — Loop 06 Complete**.
+CineAnchor Neo is currently in **V0.1 — Loop 08 CC Execution Complete**.
 
 Spike validation (Routes 0–4) is finished: Routes 0/1/2/4 PASS, Route 3 PARTIAL.
-Loop 06 (parameter decoupling + semi-manual mass production) is complete:
-model transform, lighting overrides, camera params, and stage toggles are now
-configurable via Project JSON. 3 base videos with Seedance prompts ready for 2b
-generality validation. 72 tests pass (59 backend + 13 smoke).
+Loop 06 (parameter decoupling + semi-manual mass production) is complete.
+Loop 07 (camera trajectory engine — Catmull-Rom + SLERP + 8 presets) is complete.
+Loop 08 (interactive camera control — browser Three.js viewport + recording + keyframe fitting) is complete, pending 启明 visual gate acceptance.
+150 tests pass (103 backend + 13 smoke + 24 parity + 20 frontend + 3 schema + 2 smoke).
 
 Do not build the full product architecture before the Spike conclusions are recorded.
 

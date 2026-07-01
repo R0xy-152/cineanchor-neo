@@ -176,16 +176,32 @@ See `docs/spike_results.md` for detailed spike data and `docs/portfolio_v0_1_rev
   enabled/disabled in `scene.background_enhance`.
 - **Mass production**: 3 base videos (text-free, particle-free) with Seedance
   prompts at `docs/seedance_prompts.md`. Output under `storage/exports/mass_produce/`.
-- **72 tests** (59 backend + 13 smoke), all passing.
+- **Loop 08 interactive camera control**: browser Three.js viewport with
+  keyboard/mouse flight, recording with hard-cut support, RDP + angle filter
+  keyframe fitting, and full render pipeline integration.
+- **150 tests** (103 backend + 13 smoke + 24 parity + 20 frontend + 3 schema + 2 smoke), all passing.
+- See `AGENTS.md` for the full Loop 08 change report.
 
-## Spike History
+## Development Workflow
 
-The spike stage validated 5 technical routes over 14 days before committing to
-the V0.1 architecture. Spike code lives under `spikes/` and is intentionally
-disposable — it exists to answer questions, not to ship.
+```
+/clear → 需求 → Andy 收敛需求/整理方案 → Requirements → 启明审批
+→ Andy 产出 plans + 验收策略 → CC / plan agent 细化执行 plan
+→ Andy plan-review gate → CC 执行 → TDD → 实现
+→ git hook (单测/lint/格式/类型检查) → 视觉闸门 → parity 闸门
+→ 启明验收签收 → ADR (Andy-only) → 更新 CLAUDE.md/知识库 → push → /clear
+```
 
-Legacy spike commands and Route 3/4 details remain at the bottom of this file
-for reference.
+| Role | Who | Responsibilities |
+|------|-----|-----------------|
+| 产品/架构 | Andy | 收敛需求，产出 Requirements + Plans + 验收策略，plan-review gate，ADR |
+| 审批/验收 | 启明 | Requirements 审批，最终验收签收 |
+| 执行 | CC (Claude Code) | 细化 plan，TDD，实现，测试/git/视觉/parity 四道闸门 |
+
+Before contributing, read:
+- `AGENTS.md` — agent task rules, branch strategy, change report format
+- `.claude/CLAUDE.md` — CC execution rules, architecture, commands
+- `docs/` — scope, parameters, project JSON schema, ADRs
 
 ## Development
 

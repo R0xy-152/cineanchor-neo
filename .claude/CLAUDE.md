@@ -16,8 +16,9 @@ Spike is complete: Route 0/1/2/4 passed, Route 3 PARTIAL. Loop 06 (parameter dec
 
 **CC execution summary (2026-07-01):**
 - P1-P4 complete: interpolation port + viewport + input + recorder + fitter + hard-cut schema + backend wire
-- 150 tests green (103 backend + 13 smoke + 5 new smoke + 24 parity + 3 schema + 20 frontend)
-- Visual gate script ready at `scripts/visual_gate_loop08.py` — pending human inspection
+- Bug fix: `_adapt_user_keyframes` now offsets by `scene_center` (was missing, caused camera to miss subject)
+- 150 tests green (103 backend + 13 smoke + 24 parity + 20 frontend + 3 schema + 2 smoke)
+- Visual gate: baseline verified with AK47 GLB (`output_orbit_baseline.mp4`), keyframe path needs tuning
 - Change report in `AGENTS.md`
 
 ## Architecture: Dual Server Setup
