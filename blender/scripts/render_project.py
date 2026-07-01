@@ -984,43 +984,18 @@ def _adapt_user_keyframes(
 ) -> list[dict]:
     """Convert Three.js (Y-up) keyframes to Blender (Z-up).
 
-    Three.js: +Y=up, -Z=forward.  Blender: +Z=up, -Y=forward.
-    Converts position via coordinate swap, offset to scene_center,
-    and regenerates quaternion from converted position + derived target
-    via _quat_from_look.
+    Position: coordinate swap + scene_center offset.
+    Orientation: set to identity — TRACK_TO constraint handles look-at.
     """
-    try:
-        from camera_math import target_from_quat
-    except ImportError:
-        from blender.scripts.camera_math import target_from_quat
-
-    try:
-        from camera_presets import _quat_from_look as qfl
-    except ImportError:
-        from blender.scripts.camera_presets import _quat_from_look as qfl
-
     cx, cy, cz = scene_center
     adapted: list[dict] = []
     for kf in kfs:
-        # Position: Three.js (x, y, z) → Blender (x + cx, -z + cy, y + cz)
         tx, ty, tz = kf["pos"]
         blender_pos = [tx + cx, -tz + cy, ty + cz]
-
-        # Derive target in Three.js coords, convert to Blender coords
-        three_target = target_from_quat(kf["pos"], kf.get("quat", [0, 0, 0, 1]))
-        blender_target = [
-            three_target[0] + cx,
-            -three_target[2] + cy,
-            three_target[1] + cz,
-        ]
-
-        # Regenerate quaternion in Blender coords
-        quat = qfl(blender_pos, blender_target)
-
         adapted.append({
             "t": kf["t"],
             "pos": blender_pos,
-            "quat": quat,
+            "quat": [0, 0, 0, 1],  # identity — constraint overrides
             "fov": kf.get("fov", 55),
         })
     return adapted
@@ -1080,6 +1055,28 @@ def _persp_camera_from_frames(
     return camera, view_height
 
 
+def _add_track_to_constraint(camera: Any, target_xyz: list[float]) -> None:
+    """Add a TRACK_TO constraint so the camera always looks at the target.
+
+    Bypasses quaternion conversion from Three.js which is unreliable when
+    the camera is nearly below the target (forward ≈ up → numerical issues).
+    """
+    # Create a hidden empty at the target position
+    bpy.ops.object.empty_add(type="PLAIN_AXES", location=target_xyz)
+    target_empty = bpy.context.object
+    target_empty.name = "KeyframeLookTarget"
+    target_empty.hide_render = True
+    target_empty.hide_viewport = True
+
+    # Add track-to constraint
+    constraint = camera.constraints.new(type="TRACK_TO")
+    constraint.target = target_empty
+    constraint.track_axis = "TRACK_NEGATIVE_Z"
+    constraint.up_axis = "UP_Y"
+    # Apply constraint immediately so keyframes include the correct transform
+    bpy.context.view_layer.update()
+
+
 def add_keyframed_camera_from_data(
     width: int,
     height: int,
@@ -1105,6 +1102,11 @@ def add_keyframed_camera_from_data(
     fps = int(project["output"]["fps"])
     frames = interpolate_keyframes(adapted, fps)
     _camera, view_height = _persp_camera_from_frames(frames, fps, scene)
+
+    # Add TRACK_TO constraint — guarantees camera looks at scene center
+    # (quaternion conversion from Three.js is unreliable)
+    _add_track_to_constraint(_camera, scene_center)
+
     return view_height
 
 
@@ -1144,6 +1146,7 @@ def add_keyframed_camera_from_shots(
         return add_dolly_camera(width, height, project, subject)
 
     _camera, view_height = _persp_camera_from_frames(all_frames, fps, scene)
+    _add_track_to_constraint(_camera, scene_center)
     return view_height
 
 

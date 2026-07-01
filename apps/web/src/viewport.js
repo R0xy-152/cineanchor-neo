@@ -133,14 +133,21 @@ function init() {
             posEpsilon: SCENE_RADIUS * 0.02,
             angleEpsilon: 0.02,
         });
+        // Auto-save to server
+        fetch('/api/keyframes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(fitted),
+        }).then(r => r.json()).then(resp => {
+            console.log('[viewport] keyframes saved:', resp);
+        }).catch(err => console.error('[viewport] save failed:', err));
+        // Also print for inspection
+        console.log('[viewport] keyframes JSON:\n' + JSON.stringify(fitted, null, 2));
         if (window.opener) {
             window.opener.postMessage({
                 type: 'camera-data',
                 camera: { shots: fitted },
             }, '*');
-            console.log('[viewport] camera data sent to opener', fitted);
-        } else {
-            console.log('[viewport] camera data:', fitted);
         }
     });
 

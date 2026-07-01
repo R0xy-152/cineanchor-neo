@@ -125,6 +125,23 @@ def download_render(task_id: str) -> Any:
     )
 
 
+# ── loop 08: receive keyframes from viewport ──────────────────────────
+
+_viewport_keyframes: list[dict[str, Any]] = []
+
+@router.post("/api/keyframes")
+def save_keyframes(payload: Any = Body(...)) -> Any:
+    """Receive recorded camera keyframes from the interactive viewport."""
+    global _viewport_keyframes
+    _viewport_keyframes = payload if isinstance(payload, list) else []
+    kf_count = sum(len(s.get("keyframes", [])) for s in _viewport_keyframes)
+    return {"status": "ok", "shots": len(_viewport_keyframes), "keyframes": kf_count}
+
+@router.get("/api/keyframes")
+def get_keyframes() -> Any:
+    """Get the most recently saved viewport keyframes."""
+    return {"keyframes": _viewport_keyframes}
+
 # ── internal render worker ────────────────────────────────────────────
 
 

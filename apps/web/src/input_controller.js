@@ -161,6 +161,13 @@ function _onKeyDown(e) {
     if (code === 'Tab') e.preventDefault();
     if (code === 'Space' && isFlying) e.preventDefault();
 
+    // Reset FOV to default (55°)
+    if (code === 'KeyF') {
+        camera.fov = 55;
+        camera.updateProjectionMatrix();
+        _updateFOVHUD();
+    }
+
     // Exit flight
     if (code === 'Escape') {
         document.exitPointerLock();
@@ -271,6 +278,10 @@ function _onWheel(e) {
 // translateY(+d) = up,     translateY(-d) = down
 // translateZ(-d) = forward, translateZ(+d) = backward
 //   (camera looks along -Z in local space)
+
+function _updateFOVHUD() {
+    if (onFovChange) onFovChange(camera.fov);
+}
 
 function _updateSpeedHUD() {
     if (speedValueEl) speedValueEl.textContent = currentSpeed.toFixed(1);
