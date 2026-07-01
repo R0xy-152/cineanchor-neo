@@ -186,7 +186,23 @@ function _loadAsset(path) {
         },
         (err) => {
             console.error('[viewport] Failed to load asset:', err);
-            if (statusEl) statusEl.textContent = 'Failed to load model';
+            // Build user-facing error with actionable info
+            const msg = err.message || String(err);
+            let hint = 'UNKNOWN_ERROR';
+            if (msg.includes('404') || msg.includes('Not Found')) {
+                hint = 'FILE_NOT_FOUND — check the asset path';
+            } else if (msg.includes('CORS') || msg.includes('cross-origin')) {
+                hint = 'CORS_BLOCKED — asset must be served from same origin';
+            } else if (msg.includes('parse') || msg.includes('GLB') || msg.includes('glTF')) {
+                hint = 'PARSE_ERROR — file may be corrupted or not a valid GLB';
+            } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('Failed to fetch')) {
+                hint = 'FETCH_ERROR — server may be down or path is wrong';
+            } else if (msg.includes('403') || msg.includes('Forbidden')) {
+                hint = 'FORBIDDEN — no permission to access the file';
+            }
+            if (statusEl) {
+                statusEl.innerHTML = `<span style="color:#e04040">Failed to load model</span><br><small style="color:#888">${hint}</small><br><small style="color:#666;font-size:10px">Path: ${path}</small>`;
+            }
             _onReady(); // continue with empty scene
         }
     );
@@ -204,7 +220,7 @@ function _onReady() {
     fovValue.textContent = Math.round(camera.fov) + '°';
 
     console.log('[viewport] CineAnchor interactive viewport ready');
-    console.log('[viewport] Controls: click to fly, WASD move, L=rec, R=pause, Esc=exit');
+    console.log('[viewport] Controls: click to fly, WASD move, Left=rec/stop, Right=pause, P=screenshot, Esc=exit');
 }
 
 // ── Render loop ─────────────────────────────────────────────────────
@@ -244,11 +260,17 @@ function animate() {
     lastTime = performance.now();
 }
 
-// ── Recording key bindings ──────────────────────────────────────────
+// ── Recording controls (mouse-based, per requirements) ──────────────
 
 function _setupRecordingControls() {
-    document.addEventListener('keydown', (e) => {
-        if (e.code === 'KeyL') {
+    // Suppress context menu on right-click inside viewport
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Mouse buttons for recording (only when flying)
+    canvas.addEventListener('mousedown', (e) => {
+        if (!getIsFlying()) return;  // must be in fly mode (Pointer Lock active)
+
+        if (e.button === 0) {  // Left click: start / stop
             const state = recorder.getState();
             if (state === 'IDLE') {
                 recorder.start();
@@ -271,8 +293,7 @@ function _setupRecordingControls() {
                 updateRecUI();
                 console.log('[recorder] resumed');
             }
-        }
-        if (e.code === 'KeyR') {
+        } else if (e.button === 2) {  // Right click: pause
             if (recorder.getState() === 'RECORDING') {
                 recorder.pause();
                 recIndicator.classList.remove('active');
@@ -282,12 +303,14 @@ function _setupRecordingControls() {
                 console.log(`[recorder] paused — ${recorder.getShots().length} shots`);
             }
         }
-        // Screenshot capture (for parity comparison)
+    });
+
+    // Keyboard shortcuts (secondary): P = screenshot, Esc = handled by input_controller
+    document.addEventListener('keydown', (e) => {
         if (e.code === 'KeyP') {
             const dataUrl = canvas.toDataURL('image/png');
             const ts = recorder.getElapsed().toFixed(2);
             console.log(`[screenshot t=${ts}s]`, dataUrl);
-            // Also open in new tab for saving
             const win = window.open('', '_blank');
             if (win) {
                 win.document.write(`<img src="${dataUrl}" style="max-width:100%"><br><b>t=${ts}s</b><br>pos=${JSON.stringify(camera.position.toArray().map(v=>v.toFixed(3)))}<br>quat=${JSON.stringify(camera.quaternion.toArray().map(v=>v.toFixed(4)))}<br>fov=${camera.fov.toFixed(1)}`);
@@ -336,6 +359,15 @@ function updateFrameGuide() {
     frameRect.style.width = w + 'px';
     frameRect.style.height = h + 'px';
 }
+
+// ── Debug hook: expose camera + THREE for console inspection ────────
+window.__cineanchor__ = {
+    get camera() { return camera; },
+    get THREE() { return THREE; },
+    get scene() { return scene; },
+    get subjectGroup() { return subjectGroup; },
+    get SCENE_CENTER() { return SCENE_CENTER; },
+};
 
 // ── Start ───────────────────────────────────────────────────────────
 

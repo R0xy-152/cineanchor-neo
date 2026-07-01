@@ -26,6 +26,7 @@ let canvas = null;
 let keys = {};
 let currentSpeed = 1.0;
 let isFlying = false;
+let skipNextMouseMove = false;  // guard against Pointer Lock garbage event
 let hudTimer = 0;
 
 // HUD DOM refs (optional — set by viewport)
@@ -77,19 +78,19 @@ export function updateFlight(dt) {
         _updateSpeedHUD();
     }
 
-    // Camera-local directions
-    const forward = _getForward();
-    const right = _getRight(forward);
+    const moveSpeed = currentSpeed * MOVE_BASE * dt;
 
-    const moveSpeed = currentSpeed * MOVE_BASE;
-
-    // WASD translation (camera-local)
-    if (keys['KeyW']) camera.position.addScaledVector(forward, moveSpeed * dt);
-    if (keys['KeyS']) camera.position.addScaledVector(forward, -moveSpeed * dt);
-    if (keys['KeyA']) camera.position.addScaledVector(right, -moveSpeed * dt);
-    if (keys['KeyD']) camera.position.addScaledVector(right, moveSpeed * dt);
-    if (keys['Space']) camera.position.y += moveSpeed * dt;
-    if (keys['Control']) camera.position.y -= moveSpeed * dt;
+    // Camera-local translation using Three.js built-in methods.
+    // translateX/Y/Z move along the camera's LOCAL axes, correctly
+    // handling any combination of pitch, yaw, and roll.
+    // Camera looks along -Z: translateZ(-d)=forward, translateZ(+d)=backward
+    //                       translateX(+d)=right,   translateX(-d)=left
+    if (keys['KeyW']) camera.translateZ(-moveSpeed);
+    if (keys['KeyS']) camera.translateZ(moveSpeed);
+    if (keys['KeyA']) camera.translateX(-moveSpeed);
+    if (keys['KeyD']) camera.translateX(moveSpeed);
+    if (keys['Space']) camera.translateY(moveSpeed);
+    if (keys['Control']) camera.translateY(-moveSpeed);
 
     // HUD auto-hide
     hudTimer += dt;
@@ -138,6 +139,7 @@ export function isSpeedKeyHeld() {
 
 function _onCanvasClick(_e) {
     if (!isFlying) {
+        armPointerLockGuard();   // must be BEFORE requestPointerLock
         canvas.requestPointerLock();
         isFlying = true;
         canvas.classList.add('fly');
@@ -173,47 +175,79 @@ function _onKeyUp(e) {
     keys[e.code] = false;
 }
 
+// Guard: reject spurious mousemove events from pointer-lock engagement.
+// Some browsers fire a single mousemove with garbage movementX/Y (often
+// ±hundreds of pixels) when Pointer Lock first activates.
+let _pointerLockArmed = false;
+let _firstMouseSkipped = false;
+
+// Exported so viewport can call it right AFTER requestPointerLock resolves.
+export function armPointerLockGuard() {
+    _pointerLockArmed = true;
+    _firstMouseSkipped = false;
+}
+
 function _onMouseMove(e) {
     if (!isFlying) return;
+
+    // Skip the first mousemove after pointer-lock engage — it may carry
+    // garbage movementX/Y from the cursor teleport, not real user input.
+    if (_pointerLockArmed && !_firstMouseSkipped) {
+        _firstMouseSkipped = true;
+        console.log('[input] skipped first mousemove after pointer lock',
+                    'movementX=', e.movementX, 'movementY=', e.movementY);
+        return;
+    }
+
     const dx = e.movementX * MOUSE_SENSITIVITY;
     const dy = e.movementY * MOUSE_SENSITIVITY;
 
-    // Yaw (around world Y)
-    camera.rotateY(-dx);
+    // Yaw around WORLD Y axis — critical: use world axis, not local Y
+    // (local Y tilts after pitch, causing roll accumulation and WASD drift)
+    const worldUp = new THREE_NS.Vector3(0, 1, 0);
+    camera.rotateOnWorldAxis(worldUp, -dx);
 
-    // Pitch (around camera-local X), clamped
+    // Pitch around camera-local X axis (before clamping, for responsive feel)
     const pitchAxis = new THREE_NS.Vector3(1, 0, 0);
     pitchAxis.applyQuaternion(camera.quaternion);
     camera.rotateOnWorldAxis(pitchAxis, -dy);
 
-    // Clamp pitch to avoid flipping
-    const euler = new THREE_NS.Euler().setFromQuaternion(camera.quaternion, 'YXZ');
-    if (euler.x > Math.PI / 2.2) euler.x = Math.PI / 2.2;
-    if (euler.x < -Math.PI / 2.2) euler.x = -Math.PI / 2.2;
-    camera.quaternion.setFromEuler(euler);
+    // ── Geometric pitch clamp ────────────────────────────────────────
+    // Instead of Euler YXZ decomposition (which can flip yaw/roll at
+    // extreme pitch), clamp geometrically: measure the angle of the
+    // camera's look direction relative to the horizontal plane, and
+    // rotate around the camera's local X axis to stay within limits.
+    const _lookDir = new THREE_NS.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+    const MAX_PITCH = Math.PI * 0.45;  // ~81°
+    const geoPitch = Math.asin(_lookDir.y);  // angle above horizontal
+
+    if (geoPitch > MAX_PITCH) {
+        // Tilt down: positive rotation around local X
+        const _localX = new THREE_NS.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+        camera.rotateOnWorldAxis(_localX, geoPitch - MAX_PITCH);
+    } else if (geoPitch < -MAX_PITCH) {
+        // Tilt up: negative rotation around local X
+        const _localX = new THREE_NS.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+        camera.rotateOnWorldAxis(_localX, geoPitch + MAX_PITCH);
+    }
 }
 
 function _onWheel(e) {
     e.preventDefault();
     if (!isFlying) return;
-    const forward = _getForward();
     const dollySpeed = currentSpeed * SCROLL_SENSITIVITY;
-    camera.position.addScaledVector(forward, e.deltaY > 0 ? dollySpeed : -dollySpeed);
+    // translateZ(-d) = forward (scroll up = dolly in), translateZ(+d) = backward
+    camera.translateZ(e.deltaY > 0 ? dollySpeed : -dollySpeed);
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────
-
-function _getForward() {
-    const dir = new THREE_NS.Vector3();
-    camera.getWorldDirection(dir);
-    return dir;
-}
-
-function _getRight(forward) {
-    const r = new THREE_NS.Vector3();
-    r.crossVectors(forward, camera.up).normalize();
-    return r;
-}
+// ── Movement: use camera.translateX/Y/Z (Three.js built-in, battle-tested) ──
+// This is the same approach used by PointerLockControls — it moves the camera
+// along its LOCAL axes, which correctly accounts for pitch, yaw, and any roll.
+//
+// translateX(+d) = right,  translateX(-d) = left
+// translateY(+d) = up,     translateY(-d) = down
+// translateZ(-d) = forward, translateZ(+d) = backward
+//   (camera looks along -Z in local space)
 
 function _updateSpeedHUD() {
     if (speedValueEl) speedValueEl.textContent = currentSpeed.toFixed(1);
