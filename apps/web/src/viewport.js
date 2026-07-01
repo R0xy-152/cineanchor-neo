@@ -71,7 +71,7 @@ function init() {
     // Default position matches Blender orbit preset: Three.js (0, 0.5, 7)
     // converts to Blender (0, -7, 0.5) which frames the model correctly.
     camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(5, 0.5, 5);
+    camera.position.set(7, 0.5, 0);
     camera.lookAt(SCENE_CENTER);
     camera.updateProjectionMatrix();
 

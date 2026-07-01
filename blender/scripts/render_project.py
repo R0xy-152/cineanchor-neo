@@ -992,31 +992,51 @@ def _adapt_user_keyframes(
     import bpy
     from mathutils import Vector, Matrix
 
+    try:
+        from camera_math import target_from_quat as _tfq
+    except ImportError:
+        from blender.scripts.camera_math import target_from_quat as _tfq
+
     cx, cy, cz = scene_center
     adapted: list[dict] = []
     for kf in kfs:
         tx, ty, tz = kf["pos"]
         blender_pos = Vector((tx + cx, -tz + cy, ty + cz))
-        # Camera looks along -Z in local space
-        fwd = (Vector(scene_center) - blender_pos).normalized()
 
-        # Choose up reference: avoid the forward axis
+        # Convert the user's Three.js quaternion to a look-at target,
+        # then convert that target to Blender space, and compute a
+        # Blender quaternion from position + target.
+        # Use the ACTUAL distance to the scene center, not a fixed 5m,
+        # because target_from_quat extends along the look direction.
+        three_quat = kf.get("quat", [0, 0, 0, 1])
+        dist_to_center = math.sqrt(
+            (tx - 0)**2 + (ty - 0)**2 + (tz - 0)**2
+        )
+        dist = max(dist_to_center, 1.0)
+        three_target = _tfq([tx, ty, tz], three_quat, dist)
+
+        # The derived target is a point 5m ahead in Three.js — convert it
+        # to Blender space the same way we convert positions
+        blender_target = Vector((
+            three_target[0] + cx,
+            -three_target[2] + cy,
+            three_target[1] + cz,
+        ))
+
+        # Use Blender's built-in look-at via matrix construction
+        fwd = (blender_target - blender_pos).normalized()
         if abs(fwd.z) > 0.99:
-            up_ref = Vector((0, 1, 0))  # use Y when forward ≈ Z
+            up_ref = Vector((0, 1, 0))
         else:
-            up_ref = Vector((0, 0, 1))  # default Z-up
-
+            up_ref = Vector((0, 0, 1))
         right = fwd.cross(up_ref).normalized()
         if right.length < 0.001:
             right = Vector((1, 0, 0))
         up_actual = right.cross(fwd).normalized()
-        neg_fwd = -fwd  # camera looks along -Z
-
-        # Build rotation matrix: columns = [right, up_actual, -fwd]
         rot = Matrix((
-            (right.x,   up_actual.x,   neg_fwd.x),
-            (right.y,   up_actual.y,   neg_fwd.y),
-            (right.z,   up_actual.z,   neg_fwd.z),
+            (right.x,   up_actual.x,   -fwd.x),
+            (right.y,   up_actual.y,   -fwd.y),
+            (right.z,   up_actual.z,   -fwd.z),
         ))
         quat_vec = rot.to_quaternion()
         quat = [quat_vec.x, quat_vec.y, quat_vec.z, quat_vec.w]
@@ -1027,6 +1047,13 @@ def _adapt_user_keyframes(
             "quat": quat,
             "fov": kf.get("fov", 55),
         })
+
+    # Debug: print first adapted keyframe
+    if adapted:
+        a0 = adapted[0]
+        print(f"[DEBUG _adapt] pos={[round(v,2) for v in a0['pos']]} "
+              f"quat={[round(v,4) for v in a0['quat']]} "
+              f"fov={a0['fov']} scene_center={scene_center}")
     return adapted
 
 

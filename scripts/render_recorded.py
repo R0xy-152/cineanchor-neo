@@ -6,7 +6,11 @@ REPO = Path(__file__).resolve().parents[1]
 out_dir = REPO / "storage" / "visual_gate" / "loop08_parity"
 out_dir.mkdir(parents=True, exist_ok=True)
 
-kf_data = json.loads((out_dir / "recorded_keyframes.json").read_text())
+import urllib.request
+resp = urllib.request.urlopen("http://127.0.0.1:8000/api/keyframes")
+kf_data = json.loads(resp.read())
+# Also save for reference
+(out_dir / "recorded_keyframes.json").write_text(json.dumps(kf_data, indent=2))
 shots = kf_data["keyframes"]  # [{index, cut, keyframes: [...]}]
 
 project = {
