@@ -141,6 +141,58 @@ function init() {
         }
     });
 
+    // ── Load asset if provided via URL param ────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const assetPath = params.get('asset');
+    if (assetPath) {
+        _loadAsset(assetPath);
+    } else {
+        _onReady();
+    }
+}
+
+function _loadAsset(path) {
+    const statusEl = document.getElementById('load-status');
+    if (statusEl) statusEl.textContent = 'Loading model...';
+
+    const loader = new GLTFLoader();
+    loader.load(
+        path,
+        (gltf) => {
+            subjectGroup = gltf.scene;
+            scene.add(subjectGroup);
+
+            // Compute bounding box
+            const box = new THREE.Box3().setFromObject(subjectGroup);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            subjectGroup.position.sub(center); // center the model
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            SCENE_RADIUS = Math.max(size.x, size.y, size.z) * 0.7;
+
+            if (statusEl) {
+                statusEl.textContent = 'Model loaded. Click to fly.';
+                setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
+            }
+
+            _onReady();
+        },
+        (progress) => {
+            if (statusEl && progress.total > 0) {
+                const pct = Math.round(progress.loaded / progress.total * 100);
+                statusEl.textContent = `Loading... ${pct}%`;
+            }
+        },
+        (err) => {
+            console.error('[viewport] Failed to load asset:', err);
+            if (statusEl) statusEl.textContent = 'Failed to load model';
+            _onReady(); // continue with empty scene
+        }
+    );
+}
+
+function _onReady() {
     // Start
     clock = new THREE.Clock();
     lastTime = performance.now();
@@ -228,6 +280,17 @@ function _setupRecordingControls() {
                 recDot.classList.remove('rec-blink');
                 updateRecUI();
                 console.log(`[recorder] paused — ${recorder.getShots().length} shots`);
+            }
+        }
+        // Screenshot capture (for parity comparison)
+        if (e.code === 'KeyP') {
+            const dataUrl = canvas.toDataURL('image/png');
+            const ts = recorder.getElapsed().toFixed(2);
+            console.log(`[screenshot t=${ts}s]`, dataUrl);
+            // Also open in new tab for saving
+            const win = window.open('', '_blank');
+            if (win) {
+                win.document.write(`<img src="${dataUrl}" style="max-width:100%"><br><b>t=${ts}s</b><br>pos=${JSON.stringify(camera.position.toArray().map(v=>v.toFixed(3)))}<br>quat=${JSON.stringify(camera.quaternion.toArray().map(v=>v.toFixed(4)))}<br>fov=${camera.fov.toFixed(1)}`);
             }
         }
     });
