@@ -101,7 +101,9 @@ class GoldenPathSmokeTests(unittest.TestCase):
         mock_ffmpeg: object,
         mock_blender: object,
     ) -> None:
-        status, body = asgi_request("POST", "/api/render", character_project())
+        payload = character_project()
+        payload["scene"]["particles"] = None  # standard path, no particles
+        status, body = asgi_request("POST", "/api/render", payload)
         self.assertEqual(status, 200)
         self.assertTrue(body["task_id"])
         self.assertEqual(body["status"], "PENDING")
@@ -132,7 +134,9 @@ class GoldenPathSmokeTests(unittest.TestCase):
         mock_ffmpeg: object,
         mock_blender: object,
     ) -> None:
-        status, body = asgi_request("POST", "/api/render", character_project())
+        payload = character_project()
+        payload["scene"]["particles"] = None  # standard path, no particles
+        status, body = asgi_request("POST", "/api/render", payload)
         self.assertEqual(status, 200)
         self.assertTrue(body["task_id"])
         self.assertEqual(body["status"], "PENDING")
@@ -152,6 +156,7 @@ class GoldenPathSmokeTests(unittest.TestCase):
         mock_blender: object,
     ) -> None:
         payload = character_project()
+        payload["scene"]["particles"] = None  # standard path, no particles
         payload["ai_enhance"] = {"enabled": True, "mode": "conservative"}
 
         status, body = asgi_request("POST", "/api/render", payload)
@@ -185,6 +190,7 @@ class GoldenPathSmokeTests(unittest.TestCase):
         )
 
         payload = character_project()
+        payload["scene"]["particles"] = None  # standard path, no particles
         payload["ai_enhance"] = {"enabled": True, "mode": "conservative"}
 
         status, body = asgi_request("POST", "/api/render", payload)
@@ -298,6 +304,63 @@ class GoldenPathSmokeTests(unittest.TestCase):
         asyncio.run(app(scope, receive, send))
         start = next(m for m in messages if m["type"] == "http.response.start")
         self.assertEqual(start["status"], 200)
+
+
+    # ── Loop 08: interactive camera render ──────────────────────────
+
+    @patch.object(BlenderService, "render_project")
+    @patch.object(FFmpegService, "compose_mp4")
+    @patch.object(comfy_service.ComfyService, "enhance")
+    def test_render_with_keyframes_completes(
+        self,
+        mock_enhance: object,
+        mock_ffmpeg: object,
+        mock_blender: object,
+    ) -> None:
+        """Interactive camera keyframes pass through render pipeline."""
+        payload = character_project()
+        payload["scene"]["particles"] = None
+        payload["camera"]["keyframes"] = [
+            {"t": 0.0, "pos": [0, -5, 1.5], "quat": [0, 0, 0, 1], "fov": 55},
+            {"t": 2.0, "pos": [0, -3, 1.5], "quat": [0, 0, 0.3827, 0.9239], "fov": 55, "cut": True},
+            {"t": 4.0, "pos": [0, -1, 1.5], "quat": [0, 0, 0, 1], "fov": 55},
+        ]
+        status, body = asgi_request("POST", "/api/render", payload)
+        self.assertEqual(status, 200)
+        self.assertTrue(body["task_id"])
+
+        snap = _wait_for_status(body["task_id"], frozenset({"DONE", "FAILED"}))
+        self.assertEqual(snap["status"], "DONE")
+        self.assertIsNotNone(snap["standard_output_path"])
+
+    @patch.object(BlenderService, "render_project")
+    @patch.object(FFmpegService, "compose_mp4")
+    @patch.object(comfy_service.ComfyService, "enhance")
+    def test_render_with_shots_completes(
+        self,
+        mock_enhance: object,
+        mock_ffmpeg: object,
+        mock_blender: object,
+    ) -> None:
+        """Multi-shot interactive camera shots pass through render pipeline."""
+        payload = character_project()
+        payload["scene"]["particles"] = None
+        payload["camera"]["shots"] = [
+            {"index": 0, "cut": True, "keyframes": [
+                {"t": 0.0, "pos": [0, -5, 1.5], "quat": [0, 0, 0, 1], "fov": 55},
+                {"t": 2.0, "pos": [0, -3, 1.5], "quat": [0, 0, 0.3827, 0.9239], "fov": 55, "cut": True},
+            ]},
+            {"index": 1, "cut": False, "keyframes": [
+                {"t": 2.0, "pos": [0, -3, 1.5], "quat": [0, 0, 0.3827, 0.9239], "fov": 55},
+                {"t": 4.0, "pos": [3, -1, 1.5], "quat": [0, 0, 0, 1], "fov": 55},
+            ]},
+        ]
+        status, body = asgi_request("POST", "/api/render", payload)
+        self.assertEqual(status, 200)
+        self.assertTrue(body["task_id"])
+
+        snap = _wait_for_status(body["task_id"], frozenset({"DONE", "FAILED"}))
+        self.assertEqual(snap["status"], "DONE")
 
 
 if __name__ == "__main__":

@@ -34,6 +34,9 @@ class RenderTask:
     warning_message: str | None = None
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
+    # ── A→B escalation gate (ADR-006 / ADJ-2) ─────────────────────
+    particle_method: str = "A"  # "A" = 2D overlay, "B" = Blender pass
+    particle_attempts: int = 0
 
     def snapshot(self) -> dict[str, Any]:
         return {
@@ -49,6 +52,8 @@ class RenderTask:
             "warning_message": self.warning_message,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
+            "particle_method": self.particle_method,
+            "particle_attempts": self.particle_attempts,
         }
 
 

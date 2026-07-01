@@ -141,7 +141,94 @@ body {
 /* ── utility ────────────────────────────────────────────────────────── */
 .hidden { display: none !important; }
 
-/* ── responsive ─────────────────────────────────────────────────────── */
+/* ── camera control ─────────────────────────────────────────────────── */
+.camera-control {
+  background: #161b22; border: 1px solid #21262d; border-radius: 10px;
+  padding: 16px;
+}
+.cam-speed-display {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.speed-label { font-size: 0.82rem; color: #8b949e; font-weight: 600; min-width: 36px; }
+.speed-value {
+  font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: #58a6ff; min-width: 52px; text-align: right;
+  font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+}
+.speed-bar-track {
+  flex: 1; height: 6px; background: #21262d; border-radius: 3px; overflow: hidden;
+}
+.speed-bar-fill {
+  height: 100%; background: linear-gradient(90deg, #58a6ff, #3d8bfd);
+  border-radius: 3px; transition: width 0.05s linear;
+}
+.cam-key-hints {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 0.78rem; color: #6e7681;
+}
+.cam-key-hints kbd {
+  display: inline-block; padding: 2px 7px; border-radius: 4px;
+  background: #21262d; color: #e6edf3; border: 1px solid #30363d;
+  font-family: inherit; font-size: 0.75rem; font-weight: 600;
+}
+.hint-arrow { color: #8b949e; }
+.hint-note { color: #58a6ff; opacity: 0.7; margin-left: auto; }
+
+/* ── speed HUD overlay ──────────────────────────────────────────────── */
+.hud-overlay {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  background: rgba(13, 17, 23, 0.88); backdrop-filter: blur(4px);
+  border: 1px solid rgba(48, 54, 61, 0.7); border-radius: 10px;
+  padding: 10px 14px; pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.hud-body {
+  display: flex; align-items: center; gap: 8px;
+}
+.hud-label {
+  font-size: 0.7rem; font-weight: 700; color: #6e7681;
+  letter-spacing: 0.1em; padding: 2px 6px; border-radius: 3px;
+  background: #21262d;
+}
+.hud-speed {
+  font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: #58a6ff; min-width: 42px; text-align: right;
+  font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+}
+.hud-bar-track {
+  width: 50px; height: 4px; background: #21262d; border-radius: 2px; overflow: hidden;
+}
+.hud-bar-fill {
+  height: 100%; background: linear-gradient(90deg, #58a6ff, #3d8bfd);
+  border-radius: 2px; transition: width 0.04s linear;
+}
+.hud-unit { font-size: 0.72rem; color: #6e7681; font-weight: 600; }
+
+/* ── Interactive camera (loop 08) ────────────────────────────────── */
+.loop-badge {
+  display: inline-block; font-size: 0.68rem; font-weight: 700;
+  background: linear-gradient(135deg, #55EEFF, #FF59A6); color: #0a0a0f;
+  padding: 1px 6px; border-radius: 4px; vertical-align: middle;
+  margin-left: 6px;
+}
+.interactive-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.interactive-btn {
+  padding: 9px 20px; border: 1px solid rgba(85,238,255,0.4);
+  border-radius: 8px; background: rgba(85,238,255,0.08);
+  color: #55EEFF; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.interactive-btn:hover { background: rgba(85,238,255,0.16); border-color: rgba(85,238,255,0.7); }
+.interactive-status { font-size: 0.82rem; color: #888; }
+.interactive-clear {
+  padding: 4px 12px; border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px; background: transparent; color: #aaa;
+  font-size: 0.78rem; cursor: pointer;
+}
+.interactive-clear:hover { border-color: rgba(255,100,100,0.4); color: #ff6666; }
+
 @media (max-width: 720px) {
   .template-cards { grid-template-columns: 1fr; }
   .param-grid { grid-template-columns: 1fr; }

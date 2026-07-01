@@ -74,6 +74,39 @@
         </div>
       </section>
 
+      <!-- Camera control -->
+      <section class="section" id="cameraControlSection">
+        <h2 class="section-title">
+          镜头控制
+          <span class="hint">键盘实时操控</span>
+        </h2>
+        <div class="camera-control">
+          <div class="cam-speed-display">
+            <span class="speed-label">速度</span>
+            <span class="speed-value" id="speedValue">1.00</span>
+            <div class="speed-bar-track">
+              <div class="speed-bar-fill" id="speedBarFill" style="width: 20%"></div>
+            </div>
+          </div>
+          <div class="cam-key-hints">
+            <kbd>Shift</kbd> <span class="hint-arrow">减速</span>
+            <kbd>Tab</kbd> / <kbd>Alt</kbd> <span class="hint-arrow">加速</span>
+            <span class="hint-note">松手保持速度 · 生成时锁定</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Interactive camera (loop 08) -->
+      <section class="section">
+        <h2 class="section-title">交互预览 <span class="loop-badge">NEW</span></h2>
+        <div class="interactive-row">
+          <button class="interactive-btn" id="interactiveBtn" type="button">打开 3D 预览</button>
+          <span class="interactive-status" id="interactiveStatus">未录制</span>
+          <button class="interactive-clear hidden" id="interactiveClear" type="button">清除</button>
+        </div>
+        <p class="param-hint">在 3D 窗口中操作相机并录制运镜，完成后数据自动回传。</p>
+      </section>
+
       <!-- Render mode -->
       <section class="section">
         <h2 class="section-title">渲染模式</h2>
@@ -113,6 +146,18 @@
       <!-- Error -->
       <div class="error-banner hidden" id="errorBanner"></div>
     </main>
+
+    <!-- Speed HUD overlay -->
+    <div class="hud-overlay hidden" id="hudOverlay">
+      <div class="hud-body">
+        <span class="hud-label">CAM</span>
+        <span class="hud-speed" id="hudSpeed">1.00</span>
+        <div class="hud-bar-track">
+          <div class="hud-bar-fill" id="hudBarFill" style="width: 20%"></div>
+        </div>
+        <span class="hud-unit">×</span>
+      </div>
+    </div>
 
     <script src="/web/app.js"></script>
   </body>

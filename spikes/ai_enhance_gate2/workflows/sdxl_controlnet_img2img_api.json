@@ -1,0 +1,179 @@
+{
+  "1": {
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load no-text frame"
+    },
+    "inputs": {
+      "image": "__INPUT_IMAGE__"
+    }
+  },
+  "2": {
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load SDXL checkpoint"
+    },
+    "inputs": {
+      "ckpt_name": "__CHECKPOINT_NAME__"
+    }
+  },
+  "3": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Positive prompt"
+    },
+    "inputs": {
+      "clip": [
+        "2",
+        1
+      ],
+      "text": "__POSITIVE_PROMPT__"
+    }
+  },
+  "4": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Negative prompt"
+    },
+    "inputs": {
+      "clip": [
+        "2",
+        1
+      ],
+      "text": "__NEGATIVE_PROMPT__"
+    }
+  },
+  "5": {
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load structural control image"
+    },
+    "inputs": {
+      "image": "__CONTROL_IMAGE__"
+    }
+  },
+  "6": {
+    "class_type": "ControlNetLoader",
+    "_meta": {
+      "title": "Load ControlNet"
+    },
+    "inputs": {
+      "control_net_name": "__CONTROL_NET_NAME__"
+    }
+  },
+  "7": {
+    "class_type": "SetUnionControlNetType",
+    "_meta": {
+      "title": "Select union ControlNet type"
+    },
+    "inputs": {
+      "control_net": [
+        "6",
+        0
+      ],
+      "type": "__CONTROL_TYPE__"
+    }
+  },
+  "8": {
+    "class_type": "ControlNetApplyAdvanced",
+    "_meta": {
+      "title": "Apply structure control"
+    },
+    "inputs": {
+      "positive": [
+        "3",
+        0
+      ],
+      "negative": [
+        "4",
+        0
+      ],
+      "control_net": [
+        "7",
+        0
+      ],
+      "image": [
+        "5",
+        0
+      ],
+      "strength": "__CONTROL_STRENGTH__",
+      "start_percent": "__CONTROL_START__",
+      "end_percent": "__CONTROL_END__"
+    }
+  },
+  "9": {
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "Encode source image"
+    },
+    "inputs": {
+      "pixels": [
+        "1",
+        0
+      ],
+      "vae": [
+        "2",
+        2
+      ]
+    }
+  },
+  "10": {
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "Structure-controlled img2img"
+    },
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "8",
+        0
+      ],
+      "negative": [
+        "8",
+        1
+      ],
+      "latent_image": [
+        "9",
+        0
+      ],
+      "seed": "__SEED__",
+      "steps": "__STEPS__",
+      "cfg": "__CFG__",
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": "__DENOISE__"
+    }
+  },
+  "11": {
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "Decode enhanced image"
+    },
+    "inputs": {
+      "samples": [
+        "10",
+        0
+      ],
+      "vae": [
+        "2",
+        2
+      ]
+    }
+  },
+  "12": {
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save enhanced frame"
+    },
+    "inputs": {
+      "images": [
+        "11",
+        0
+      ],
+      "filename_prefix": "__OUTPUT_PREFIX__"
+    }
+  }
+}

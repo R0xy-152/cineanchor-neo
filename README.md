@@ -2,7 +2,7 @@
 
 Generate 8–15 second game promotion videos from PNG images or GLB models.
 
-**Stage:** V0.1 Release Candidate
+**Stage:** V0.1 — Loop 06 Complete (parameter decoupling + mass production)
 
 ## What is CineAnchor?
 
@@ -67,7 +67,11 @@ scripts\run_tests.bat
 | Template | Asset | Camera | Description |
 |---|---|---|---|
 | character_intro | PNG (transparent) | dolly_in | Character entrance with title overlay |
-| product_orbit | GLB (3D model) | orbit | Product showcase with front-arc rotation |
+| product_orbit | GLB (3D model) | dolly_in / orbit | Product showcase with tunable camera |
+
+Camera params (`height`, `start_distance`, `end_distance`, `focal_length`) are
+now wired into Blender. Both templates support configurable lighting overrides
+and model transform (location / rotation / scale). See `docs/parameters.md`.
 
 ## Render Modes
 
@@ -116,11 +120,12 @@ Full contract: `docs/api_contract.md`
 
 ```
 storage/
-├── assets/{asset_id}/      # Uploaded source files
-├── projects/{task_id}/     # Generated project.json
-├── renders/{task_id}/frames/  # Blender PNG frames
-├── exports/{task_id}/      # final.mp4, enhanced.mp4
-└── logs/{task_id}/         # blender.log, ffmpeg.log
+├── assets/{asset_id}/           # Uploaded source files
+├── projects/{task_id}/          # Generated project.json
+├── renders/{task_id}/frames/    # Blender PNG frames
+├── exports/{task_id}/           # final.mp4, enhanced.mp4
+│   └── mass_produce/{weapon}/   # Loop 06 base videos + project.json
+└── logs/{task_id}/              # blender.log, ffmpeg.log
 ```
 
 All under `storage/` — gitignored.
@@ -159,9 +164,19 @@ See `docs/spike_results.md` for detailed spike data and `docs/portfolio_v0_1_rev
 - No user accounts or project history
 - No GLB decimation — large models may time out
 - No automatic background removal for non-transparent PNGs
-- subject_scale not supported (V0.2)
 - In-memory task store (lost on server restart)
 - Single-threaded rendering (one task at a time)
+- Font style selection not yet wired (Blender uses default font)
+
+## What's New in Loop 06
+
+- **Parameter decoupling**: model transform (location/rotation/scale), per-light
+  overrides, camera params now configurable via JSON — no code changes needed.
+- **Stage toggles**: ring, glints, cloth texture, text overlay can be
+  enabled/disabled in `scene.background_enhance`.
+- **Mass production**: 3 base videos (text-free, particle-free) with Seedance
+  prompts at `docs/seedance_prompts.md`. Output under `storage/exports/mass_produce/`.
+- **72 tests** (59 backend + 13 smoke), all passing.
 
 ## Spike History
 

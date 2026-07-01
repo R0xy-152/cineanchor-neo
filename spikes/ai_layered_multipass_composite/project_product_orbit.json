@@ -1,0 +1,21 @@
+{
+  "template": "product_orbit",
+  "assets": [
+    {
+      "id": "main_subject",
+      "type": "glb",
+      "path": "input/model.glb"
+    }
+  ],
+  "camera": {
+    "motion": "orbit"
+  },
+  "output": {
+    "duration": 4,
+    "fps": 24
+  },
+  "text": {
+    "title": "暗影刺客",
+    "subtitle": "全新赛季 即刻开战"
+  }
+}

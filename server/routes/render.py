@@ -9,12 +9,14 @@ from fastapi import APIRouter, Body
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import ValidationError
 
-from server.config import settings
+from server.config import REPO_ROOT, settings
 from server.schemas.project import ProjectJSON
 from server.services.blender_service import BlenderService
 from server.services.errors import CineAnchorError, ErrorCode, error_payload
 from server.services.ffmpeg_service import FFmpegService
 from server.services.task_queue import TaskStatus, task_store
+
+OVERLAYS_DIR = REPO_ROOT / "assets" / "overlays"
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -150,12 +152,31 @@ def _execute_render(task_id: str) -> None:
             status=TaskStatus.COMPOSITING,
             message="FFmpeg composition is running.",
         )
-        FFmpegService.compose_mp4(
-            frames_dir=frames_dir,
-            output_path=standard_path,
-            fps=project.output.fps,
-            task_id=task_id,
-        )
+
+        if project.scene.particles and project.scene.particles.enabled:
+            # Enhanced composition with vignette + particle/bokeh overlays
+            particles = project.scene.particles
+            FFmpegService.compose_mp4_with_effects(
+                frames_dir=frames_dir,
+                output_path=standard_path,
+                fps=project.output.fps,
+                task_id=task_id,
+                ember_overlay_path=OVERLAYS_DIR / "embers_default.mp4",
+                bokeh_overlay_path=OVERLAYS_DIR / "bokeh_default.mp4",
+                particles_enabled=True,
+                particles_speed=particles.speed,
+                particles_opacity=particles.opacity,
+                particles_color=particles.color,
+                vignette_enabled=True,
+            )
+        else:
+            # Standard composition (no effects)
+            FFmpegService.compose_mp4(
+                frames_dir=frames_dir,
+                output_path=standard_path,
+                fps=project.output.fps,
+                task_id=task_id,
+            )
 
         # ── optional AI enhancement ─────────────────────────────────
         enhanced_path: Path | None = None

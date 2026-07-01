@@ -61,3 +61,8 @@ Thumbs.db
 # Database
 *.sqlite
 *.sqlite3
+*.bak
+
+*.bak
+*.p3
+*.pre_p3

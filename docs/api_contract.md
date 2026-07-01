@@ -4,6 +4,11 @@ This contract covers the V0.1 backend with render execution. The API validates
 formal Project JSON and executes Blender + FFmpeg rendering to produce
 downloadable MP4 files.
 
+The Project JSON schema has been expanded in loop-06 with optional model
+transform, lighting overrides, and stage element toggles. See
+`docs/parameters.md` for the complete parameter table and
+`docs/project_json_schema.md` for the formal schema definition.
+
 ## Health
 
 `GET /health`
@@ -210,7 +215,7 @@ server and open `http://127.0.0.1:8000/web/`.
 
 1. User selects template (character_intro or product_orbit)
 2. User uploads an asset (PNG for character_intro, GLB for product_orbit)
-3. User sets title, subtitle, and aspect ratio (9:16 / 16:9)
+3. User sets title, subtitle, aspect ratio (9:16 / 16:9), and optional parameter overrides
 4. User chooses render mode: 快速版 (standard) or 精品版 (mild enhancement)
 5. Frontend builds formal V0.1 Project JSON and POSTs to `/api/render`
 6. Frontend polls `GET /api/render/{task_id}/status` every 3s (first 30s) then 10s

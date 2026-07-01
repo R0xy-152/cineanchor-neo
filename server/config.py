@@ -40,6 +40,11 @@ class Settings:
     CINEANCHOR_HOST: str
     CINEANCHOR_PORT: int
 
+    @property
+    def OVERLAYS_DIR(self) -> Path:
+        """Repo-root overlay assets (checked in, not runtime)."""
+        return REPO_ROOT / "assets" / "overlays"
+
 
 def load_settings() -> Settings:
     storage_dir = _resolve_repo_path(_env_text("STORAGE_DIR", "storage"))
