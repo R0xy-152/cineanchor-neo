@@ -56,31 +56,34 @@ def _quat_from_look(
     # (Blender camera looks down -Z, so the look-at direction is -forward)
     nfx, nfy, nfz = -forward[0], -forward[1], -forward[2]
 
-    trace = rx + uy2 - nfz
+    # Standard quaternion extraction from rotation matrix
+    # Matrix columns: [right, up_actual, -forward]
+    # R = [[rx, ux2, nfx], [ry, uy2, nfy], [rz, uz2, nfz]]
+    trace = rx + uy2 + nfz  # R00 + R11 + R22
     _EPS = 1e-10
     if trace > 0:
         s = max(math.sqrt(trace + 1) * 2, _EPS)
         qw = 0.25 * s
-        qx = (uz2 + nfy) / s
-        qy = (nfx + rz) / s
-        qz = (ry - rx) / s
-    elif rx > uy2 and rx > -nfz:
-        s = max(math.sqrt(1 + rx - uy2 + nfz) * 2, _EPS)
-        qw = (uz2 + nfy) / s
+        qx = (uz2 - nfy) / s  # R21 - R12
+        qy = (nfx - rz) / s   # R02 - R20
+        qz = (ry - ux2) / s   # R10 - R01
+    elif rx > uy2 and rx > nfz:  # R00 is largest
+        s = max(math.sqrt(1 + rx - uy2 - nfz) * 2, _EPS)
+        qw = (uz2 - nfy) / s   # R21 - R12
         qx = 0.25 * s
-        qy = (rx + ry) / s
-        qz = (nfx + rz) / s
-    elif uy2 > -nfz:
-        s = max(math.sqrt(1 + uy2 - rx + nfz) * 2, _EPS)
-        qw = (nfx + rz) / s
-        qx = (rx + ry) / s
+        qy = (ux2 + ry) / s    # R01 + R10
+        qz = (nfx + rz) / s    # R02 + R20
+    elif uy2 > nfz:  # R11 is largest
+        s = max(math.sqrt(1 + uy2 - rx - nfz) * 2, _EPS)
+        qw = (nfx - rz) / s    # R02 - R20
+        qx = (ux2 + ry) / s    # R01 + R10
         qy = 0.25 * s
-        qz = (uz2 + nfy) / s
-    else:
-        s = max(math.sqrt(1 + nfz + rx + uy2) * 2, _EPS)
-        qw = (ry - rx) / s
-        qx = (nfx + rz) / s
-        qy = (uz2 + nfy) / s
+        qz = (nfy + uz2) / s   # R12 + R21
+    else:  # R22 is largest
+        s = max(math.sqrt(1 + nfz - rx - uy2) * 2, _EPS)
+        qw = (ry - ux2) / s    # R10 - R01
+        qx = (nfx + rz) / s    # R02 + R20
+        qy = (nfy + uz2) / s   # R12 + R21
         qz = 0.25 * s
 
     qnorm = math.sqrt(qx * qx + qy * qy + qz * qz + qw * qw)

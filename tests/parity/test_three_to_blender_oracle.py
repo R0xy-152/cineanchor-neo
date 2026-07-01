@@ -67,24 +67,24 @@ def _blender_quat_from_look(pos: list[float], target: list[float]) -> list[float
         qw = 0.25 * s
         qx = (uz - nfy) / s   # R21 - R12
         qy = (nfx - rz) / s   # R02 - R20
-        qz = (ry - rx) / s    # R10 - R01
+        qz = (ry - ux) / s    # R10 - R01
     elif rx > uy and rx > nfz:
         s = max(math.sqrt(1 + rx - uy - nfz) * 2, _EPS)
         qw = (uz - nfy) / s
         qx = 0.25 * s
-        qy = (rx + ry) / s
-        qz = (nfx + rz) / s
+        qy = (ux + ry) / s    # R01 + R10
+        qz = (nfx + rz) / s   # R02 + R20
     elif uy > nfz:
         s = max(math.sqrt(1 + uy - rx - nfz) * 2, _EPS)
-        qw = (nfx - rz) / s
-        qx = (rx + ry) / s
+        qw = (nfx - rz) / s   # R02 - R20
+        qx = (ux + ry) / s    # R01 + R10
         qy = 0.25 * s
-        qz = (uz + nfy) / s
+        qz = (nfy + uz) / s   # R12 + R21
     else:
         s = max(math.sqrt(1 + nfz - rx - uy) * 2, _EPS)
-        qw = (ry - rx) / s
-        qx = (nfx + rz) / s
-        qy = (uz + nfy) / s
+        qw = (ry - ux) / s    # R10 - R01
+        qx = (nfx + rz) / s   # R02 + R20
+        qy = (nfy + uz) / s   # R12 + R21
         qz = 0.25 * s
 
     quat = [qx, qy, qz, qw]
