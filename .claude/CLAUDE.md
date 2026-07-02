@@ -10,16 +10,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Agent Rules:** `AGENTS.md` (read this first — task template, merge rules, change report format)
 - **Primary Docs:** `CineAnchor_可行性操作文档.md`, `README.md`
 
-## Current Phase: Loop 08 — Interactive Camera Control (CC execution complete)
+## Current Phase: Loop 08 — Interactive Camera Control ✅ COMPLETE
 
-Spike is complete: Route 0/1/2/4 passed, Route 3 PARTIAL. Loop 06 (parameter decoupling) and Loop 07 (camera trajectory engine) are done. Loop 08 (interactive camera control) — CC has completed execution. Pending 启明 visual gate acceptance.
+Loop 08 is complete. All gates passed, 启鸣签收 2026-07-02.
 
-**CC execution summary (2026-07-01):**
-- P1-P4 complete: interpolation port + viewport + input + recorder + fitter + hard-cut schema + backend wire
-- Bug fix: `_adapt_user_keyframes` now offsets by `scene_center` (was missing, caused camera to miss subject)
-- 150 tests green (103 backend + 13 smoke + 24 parity + 20 frontend + 3 schema + 2 smoke)
-- Visual gate: baseline verified with AK47 GLB (`output_orbit_baseline.mp4`), keyframe path needs tuning
-- Change report in `AGENTS.md`
+**Bug fixes delivered:**
+1. `_quat_from_look` trace formula: `R00+R11-R22` → `R00+R11+R22` (both Python and JS)
+2. Quaternion component order: `[x,y,z,w]` → `(w,x,y,z)` for Blender's `rotation_quaternion` — in BOTH `_persp_camera_from_frames` and `add_keyframed_camera`
+
+**Critical lesson — Blender quaternion convention:**
+`Object.rotation_quaternion` expects `(w, x, y, z)`. Our internal convention is `[x, y, z, w]`. ALWAYS convert when crossing the Blender boundary. Affected functions: `_persp_camera_from_frames`, `add_keyframed_camera`.
+
+**Gate results:**
+| Gate | Status |
+|------|--------|
+| 4. Visual parity | ✅ User confirmed |
+| 6. Default-path regression | ✅ Orbit/dolly/preset all PASS |
+| 7. PERSP+title carry-forward | ✅ PASS |
+
+**Test count:** 154 tests green (was 150, added 4 oracle tests)
+
+**Diagnostic scripts created (for future debugging):**
+- `scripts/parity_diagnostic.py` — single-frame pipeline math trace
+- `scripts/e2e_pipeline_trace.py` — API→Blender full pipeline
+- `scripts/side_by_side_diag.py` — orbit vs keyframed camera comparison
+- `scripts/gate6_regression.py` — default-path regression test
 
 ## Architecture: Dual Server Setup
 

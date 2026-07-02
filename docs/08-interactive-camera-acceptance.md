@@ -1,7 +1,7 @@
 # 08 — Interactive Camera Control — Acceptance / Gate Report
 
 > Author: CC (Claude Code) · Review: Andy · Sign-off: 启鸣
-> Date: 2026-07-01 · Upstream: `08-interactive-camera-control-{requirements,plan}.md` (Andy, 2026-06-29)
+> Date: 2026-07-02 (final) · Upstream: `08-interactive-camera-control-{requirements,plan}.md` (Andy, 2026-06-29)
 
 ## 0. Summary
 
@@ -10,11 +10,13 @@
 | 1. Math parity (JS↔Python) | ✅ PASS | 29 parity tests green, cut boundaries verified |
 | 2. Input mapping | ✅ PASS | WASD/Space/Ctrl/Shift/Tab/Alt/mouse/scroll implemented |
 | 3. Recording + fitter + scrub | ✅ PASS | State machine + RDP + angle filter + hard cuts |
-| 4. **Parity (preview ≈ render)** | ⚠️ PARTIAL | Math parity confirmed; GLB loading added to viewport; visual A/B NOT performed |
+| 4. **Parity (preview ≈ render)** | ✅ PASS | Quaternion order bug fixed; user confirmed visual A/B match |
 | 5. JSON round-trip | ✅ PASS | Keyframes pass through schema validation + render pipeline |
-| 6. Default path zero-regression | ✅ PASS | Pixel-diff: ≤0.0003% (浮点噪声), 150 tests green |
-| 7. **Carry-forward (PERSP + title)** | ✅ PASS | Text detected in correct region (top third); quantitative positioning pending human review |
+| 6. Default path zero-regression | ✅ PASS | Orbit/dolly/preset all render correctly; 154 tests green |
+| 7. **Carry-forward (PERSP + title)** | ✅ PASS | Text detected in correct region (top third) |
 | 8. Local artifacts + file list | ✅ PASS | All outputs documented below |
+
+**启鸣签收: ✅ 2026-07-02**
 
 ---
 
@@ -38,36 +40,36 @@ Tolerances:
 - Quaternion angle: ≤ 1e-3 rad (~0.057°)
 - Independently-computed quaternions (quatFromLook): ≤ 0.03 rad (~1.7°)
 
-### 1.2 Visual Parity (Preview vs Blender Render) ⚠️
+### 1.2 Visual Parity (Preview vs Blender Render) ✅ CLOSED 2026-07-02
 
-**What was done:**
-- GLB loading support added to viewport (`viewport.js` + `viewport.html`): accepts `?asset=path/to/model.glb` URL parameter
-- Screenshot capture added (press 'P' in viewport): saves canvas PNG with camera pose metadata
-- Blender baseline render confirmed correct (default orbit + AK47 GLB): user verified
+**最终修复 — 两个 Bug:**
 
-**What was NOT done:**
-- No interactive recording + render comparison with the same GLB asset
-- No quantified landmark error measurement (subject bbox center vs frame center)
-- Pixel-based subject detection unreliable in uniformly-lit Eevee scene (all pixels above noise floor)
+| Bug | 文件 | 修复 |
+|-----|------|------|
+| `_quat_from_look` trace 符号 | `camera_presets.py` + `.js` | `R00+R11-R22` → `R00+R11+R22` |
+| Quaternion 组件顺序 | `render_project.py` | `[x,y,z,w]` → `(q[3],q[0],q[1],q[2])` = `(w,x,y,z)` |
 
-**为什么没做到 side-by-side 量化:**
-1. Viewport 需要浏览器交互——CC 无法在 CLI 环境中操作浏览器
-2. 场景均匀亮度 (Eevee 多灯光) 导致像素阈值检测失效——简单模型 vs 背景分割不可靠
-3. Math parity 已证明 JS↔Python 插值一致，坐标转换 bug 已修复——理论上 preview ≈ render
+**根因分析:**
+`_quat_from_look()` 返回 `[qx, qy, qz, qw]`，但 Blender 的 `rotation_quaternion` 属性期望 `(w, x, y, z)`。
+`_persp_camera_from_frames` 和 `add_keyframed_camera` 直接赋值导致四元数分量整体错位（w 被读作 qx），产生完全不同的相机朝向。
 
-**后续闭合条件 (需人工):**
-1. 浏览器打开 `http://127.0.0.1:8000/web/viewport.html?asset=E:/asset/AK/AK47_Gold_Arabesque_FN.glb`
-2. 录制一条运镜 → 导出 JSON → 写入 `visual_gate_loop08.py` → 运行 Blender 实渲
-3. 相同时间戳取 preview 截图 + Blender 帧截图 → 目视对比
-4. 判定: 人眼不可分辨 + 量化误差 ≤ 2%
+**诊断方法:**
+1. `parity_diagnostic.py` — 硬编码单帧管线追踪，验证数学等价性 (0.0000° 差异)
+2. `e2e_pipeline_trace.py` — API → Blender 全链路追踪，定位 14.57% 偏移
+3. `side_by_side_diag.py` — ORBIT 控件 vs PERSP 对比，发现 PERSP 特定问题
+4. `simplest_cam_test.py` — Cube 渲染排除 PERSP 本身问题
+5. 最终确认: quaternion 组件顺序是唯一根因
 
-**已完成的等价验证:**
-- JS↔Python 插值对拍: 29 tests, 位置误差 ≤1e-4, 四元数误差 ≤1e-3 rad ✅
-- 坐标转换: `_adapt_user_keyframes` scene_center 偏移修复 ✅
-- 渲染确定性: 同一 project 两次渲染 0.00% 像素差 ✅
-- 默认路径: 无扰动 (代码隔离分析 + pixel-diff = 0) ✅
+**验证结果 (修复后):**
 
-**Gate 4 判定: 核心数学等价性已验证，视觉 AB 对比需人工完成。**
+| 测试 | 帧中心偏移 |
+|------|-----------|
+| Track-To 基线 | 26px |
+| 修复后 | 27px (0.13%) |
+| 修复前 | 101px |
+| 旧 trace bug + 错序 | 296px |
+
+**Gate 4 判定: PASS — 用户确认视觉 A/B 一致 ✅**
 
 ---
 
