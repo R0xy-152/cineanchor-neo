@@ -190,10 +190,10 @@ See `docs/spike_results.md` for detailed spike data and `docs/portfolio_v0_1_rev
 
 ```
 /clear → 需求 → Andy 收敛需求/整理方案 → Requirements → 启明审批
-→ Andy 产出 plans + 验收策略 → CC / plan agent 细化执行 plan
+→ CC 根据项目具体情况产出 plan + 验收策略 →  Andy 细化 plan + 验收策略
 → Andy plan-review gate → CC 执行 → TDD → 实现
 → git hook (单测/lint/格式/类型检查) → 视觉闸门 → parity 闸门
-→ 启明验收签收 → ADR (Andy-only) → 更新 CLAUDE.md/知识库 → push → /clear
+→ 启明验收签收 → ADR (Andy-only) → 更新文档（见下方 §文档更新策略）→ push → /clear
 ```
 
 | Role | Who | Responsibilities |
@@ -201,6 +201,22 @@ See `docs/spike_results.md` for detailed spike data and `docs/portfolio_v0_1_rev
 | 产品/架构 | Andy | 收敛需求，产出 Requirements + Plans + 验收策略，plan-review gate，ADR |
 | 审批/验收 | 启明 | Requirements 审批，最终验收签收 |
 | 执行 | CC (Claude Code) | 细化 plan，TDD，实现，测试/git/视觉/parity 四道闸门 |
+
+### 文档更新策略
+
+每个 Loop 关闭后，CC 负责更新以下文件，**保守修改、不重构结构**：
+
+| 文件 | 更新内容 | 策略 |
+|------|---------|------|
+| `.claude/CLAUDE.md` | 当前阶段、关键教训、测试数 | **精简**：只放"新会话必须知道"的信息，其余指向 README / codemap。写入克制，防止上下文臃肿 |
+| `README.md` | 版本号、测试数、What's New、API 表 | 修正 stale 数据，清理过时内容（如旧 loop 的 changelog），不新增 section |
+| `docs/codemap.md` | 新增/删除的文件路径、测试目录 | 只追加不删除，保持目录树与实际代码一致 |
+| `docs/scope.md` | 测试数、当前阶段状态 | 修正数字和状态描述，不动 In scope / Out of scope / Hard rules |
+| `docs/parameters.md` | 新增 JSON 字段 | 追加新参数表，不动已有参数的描述 |
+| `docs/api_contract.md` | 新增 API 端点 | 追加端点描述，不动已有端点 |
+| `AGENTS.md` | Change Report | 按 AGENTS.md 自身格式写入 |
+
+**原则：** CLAUDE.md 是给 CC 的速查卡（最小化），README 是给人看的项目概览，docs/ 是详细参考。信息不重复存放。
 
 Before contributing, read:
 - `AGENTS.md` — agent task rules, branch strategy, change report format
