@@ -61,7 +61,7 @@ $env:PYTHONPATH=(Get-Location).Path
 E:\cineanchor\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Isolated workspace result: 203 tests passed, 5 skipped. Clean publish-checkout result from remote base `abfb032`: 164 tests passed, 5 skipped. The count difference is caused by additional local Loop 09 tests present under `E:\cineanchor` but absent from the remote base; those unrelated files are intentionally excluded from this branch. The skipped legacy Blender command tests require historical files under `spikes/render_json/input`, which were intentionally not copied into the isolated workspace. All schema, API smoke, renderer, FFmpeg unit, frontend, camera parity and new birthday tests passed.
+Isolated workspace result: 203 tests run, suite OK (5 skipped). Clean publish-checkout result from remote base `abfb032`: 164 tests run, suite OK (5 skipped). The count difference is caused by additional local Loop 09 tests present under `E:\cineanchor` but absent from the remote base; those unrelated files are intentionally excluded from this branch. The skipped legacy Blender command tests require historical files under `spikes/render_json/input`, which were intentionally not copied into the isolated workspace. All schema, API smoke, renderer, FFmpeg unit, frontend, camera parity and new birthday tests completed successfully.
 
 Real export verification:
 
