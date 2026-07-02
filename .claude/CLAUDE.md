@@ -23,23 +23,30 @@ $env:BLENDER_PATH="C:\Program Files\Blender Foundation\Blender 5.1\blender.exe"
 $env:FFMPEG_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffmpeg.exe"
 ```
 
-Python venv at `.venv/`. Verify: `python scripts\check_env.py`
+Python venv at `.venv/`. First time only: `.\.venv\Scripts\python.exe -m pip install -r server\requirements.txt` (3 deps: fastapi, uvicorn, python-multipart). Verify: `.\.venv\Scripts\python.exe scripts\check_env.py`
 
 ## Essential Commands
 
 ```powershell
 # Run server
-python -m uvicorn server.main:app --host 127.0.0.1 --port 8000
+.\.venv\Scripts\python.exe -m uvicorn server.main:app --host 127.0.0.1 --port 8000
 
 # Run all tests (unittest — NOT pytest)
-python -m unittest discover -s tests
+.\.venv\Scripts\python.exe -m unittest discover -s tests
+
+# Run a single test file / case
+.\.venv\Scripts\python.exe -m unittest tests.backend.test_config
+.\.venv\Scripts\python.exe -m unittest tests.backend.test_config.TestConfig.test_defaults
+
+# Convenience script (runs backend → smoke → full suite)
+scripts\run_tests.bat
 ```
 
 ## Key Constraints
 
 - Blender 5.1.2 headless, FFmpeg 8.1.1
-- Node.js required for parity tests (JS↔Python cross-check)
-- `python-multipart` required for asset upload
+- Node.js required for parity tests — spawns `node` as subprocess for JS↔Python cross-check. Vanilla JS only, no npm packages needed, just `node` on PATH.
+- `python-multipart` required for asset upload (`pip install python-multipart`)
 - Serial execution only (no concurrent Blender/ComfyUI — OOM risk)
 - Local-only: no cloud, no Redis, no Celery. In-memory task store lost on restart.
 - ComfyUI must NOT be called by standard render path
@@ -47,7 +54,7 @@ python -m unittest discover -s tests
 
 ## Architecture
 
-Two FastAPI apps. Use `server.main:app` for production. See `docs/codemap.md` for full directory layout, call flow diagram, and module descriptions.
+Single FastAPI app at `server.main:app`. See `docs/codemap.md` for full directory layout, call flow diagram, and module descriptions.
 
 ## CC Execution Rules
 
