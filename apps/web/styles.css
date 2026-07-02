@@ -32,7 +32,7 @@ body {
 .vnext { font-style: normal; color: #6e7681; font-size: 0.75rem; margin-left: 6px; }
 
 /* ── template cards ─────────────────────────────────────────────────── */
-.template-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.template-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .template-card {
   display: flex; flex-direction: column; gap: 4px;
   padding: 16px; border: 2px solid #21262d; border-radius: 10px;
@@ -70,12 +70,15 @@ body {
 /* ── params ─────────────────────────────────────────────────────────── */
 .param-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .param-field { display: flex; flex-direction: column; gap: 5px; font-size: 0.85rem; color: #8b949e; }
-.param-field input, .param-field select {
+.param-field input, .param-field select, .param-field textarea {
   padding: 10px 12px; border: 1px solid #30363d; border-radius: 8px;
   background: #0d1117; color: #e6edf3; font-size: 0.9rem;
   font-family: inherit; outline: none; transition: border-color 0.2s;
 }
-.param-field input:focus, .param-field select:focus { border-color: #58a6ff; }
+.param-field input:focus, .param-field select:focus, .param-field textarea:focus { border-color: #58a6ff; }
+.param-field textarea { resize: vertical; min-height: 84px; }
+.param-field-wide { grid-column: 1 / -1; }
+.param-field input[type="color"] { width: 100%; min-height: 42px; padding: 4px; }
 .param-field input:disabled, .param-field select:disabled { opacity: 0.4; cursor: not-allowed; }
 .disabled-field { opacity: 0.55; }
 

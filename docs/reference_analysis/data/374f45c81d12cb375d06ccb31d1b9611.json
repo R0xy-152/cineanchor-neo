@@ -1,0 +1,166 @@
+{
+  "file": "E:\\cineanchor\\bluearchive\\374f45c81d12cb375d06ccb31d1b9611.mp4",
+  "duration_seconds": 20.4,
+  "width": 592,
+  "height": 1280,
+  "fps": 30.0,
+  "aspect_ratio": "37:80",
+  "video_codec": "hevc",
+  "audio": {
+    "codec": "aac",
+    "sample_rate": 44100,
+    "channels": 1,
+    "channel_layout": "mono",
+    "bit_rate": 48884
+  },
+  "crop": null,
+  "scene_change_seconds": [
+    0.067,
+    4.7,
+    7.567,
+    12.5,
+    16.167,
+    16.333,
+    16.533,
+    16.667,
+    17.433,
+    18.2
+  ],
+  "dominant_colors": [
+    {
+      "hex": "#000000",
+      "share": 0.1501,
+      "hsv": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "hex": "#F7F5F1",
+      "share": 0.1399,
+      "hsv": [
+        40.0,
+        0.024,
+        0.969
+      ]
+    },
+    {
+      "hex": "#5E5257",
+      "share": 0.1289,
+      "hsv": [
+        335.0,
+        0.128,
+        0.369
+      ]
+    },
+    {
+      "hex": "#B0A2A1",
+      "share": 0.1264,
+      "hsv": [
+        4.0,
+        0.085,
+        0.69
+      ]
+    },
+    {
+      "hex": "#333B47",
+      "share": 0.1218,
+      "hsv": [
+        216.0,
+        0.282,
+        0.278
+      ]
+    },
+    {
+      "hex": "#6C7E8C",
+      "share": 0.1193,
+      "hsv": [
+        206.2,
+        0.229,
+        0.549
+      ]
+    },
+    {
+      "hex": "#CDD7D7",
+      "share": 0.1169,
+      "hsv": [
+        180.0,
+        0.047,
+        0.843
+      ]
+    },
+    {
+      "hex": "#14191D",
+      "share": 0.0968,
+      "hsv": [
+        206.7,
+        0.31,
+        0.114
+      ]
+    }
+  ],
+  "timeline_draft": [
+    {
+      "start": 0.067,
+      "end": 4.7,
+      "duration": 4.633,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 4.7,
+      "end": 7.567,
+      "duration": 2.867,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 7.567,
+      "end": 12.5,
+      "duration": 4.933,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 12.5,
+      "end": 16.167,
+      "duration": 3.667,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 16.167,
+      "end": 16.333,
+      "duration": 0.166,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 16.333,
+      "end": 16.533,
+      "duration": 0.2,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 16.533,
+      "end": 16.667,
+      "duration": 0.134,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 16.667,
+      "end": 17.433,
+      "duration": 0.766,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 17.433,
+      "end": 18.2,
+      "duration": 0.767,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 18.2,
+      "end": 20.4,
+      "duration": 2.2,
+      "label": "scene-change segment (manual classification required)"
+    }
+  ],
+  "contact_sheet": "contact_sheets/374f45c81d12cb375d06ccb31d1b9611.jpg"
+}

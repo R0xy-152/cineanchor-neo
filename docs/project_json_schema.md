@@ -1,8 +1,12 @@
-# CineAnchor V0.1 Project JSON Schema
+# CineAnchor Project JSON Schema (V0.1 + additive V0.2)
 
 This document defines the formal V0.1 Project JSON shape used by the local
 render API. The Spike JSON under `spikes/render_json/` remains historical
 validation code.
+
+V0.2 is additive: it introduces `character_birthday`, named image slots,
+`style`, `timeline`, and birthday text fields. The two V0.1 templates keep
+their original single-asset validation and render paths.
 
 ## Character Intro Example
 
@@ -131,14 +135,14 @@ If `ai_enhance` is omitted, it defaults to:
 
 | Field | Type | Required | Notes |
 |---|---:|---:|---|
-| `version` | string | yes | V0.1 accepts `0.1`. |
+| `version` | string | yes | Accepts `0.1` and `0.2`; `character_birthday` requires `0.2`. |
 | `project_id` | string | yes | Caller-provided project identifier. |
-| `template` | enum | yes | `character_intro` or `product_orbit`. |
-| `output.duration` | integer | yes | 4 to 20 seconds. |
+| `template` | enum | yes | `character_intro`, `product_orbit`, or `character_birthday`. |
+| `output.duration` | integer | yes | 4 to 30 seconds. |
 | `output.fps` | integer | yes | V0.1 supports 24 only. |
 | `output.aspect_ratio` | enum | yes | `9:16`, `16:9`, `1:1`. |
 | `output.resolution` | enum | yes | `1080p`. |
-| `assets[].id` | string | yes | V0.1 primary subject must be `main_subject`. |
+| `assets[].id` | string | yes | Legacy: `main_subject`. Birthday: `main_character`, optional `logo`, `support_image_1..3`. |
 | `assets[].type` | enum | yes | `image` or `glb`. |
 | `assets[].path` | string | yes | Relative or configured storage path. |
 | `camera.motion` | enum | yes | `dolly_in` or `orbit`. |
@@ -182,7 +186,7 @@ If `ai_enhance` is omitted, it defaults to:
 
 | Field | Values |
 |---|---|
-| `template` | `character_intro`, `product_orbit` |
+| `template` | `character_intro`, `product_orbit`, `character_birthday` |
 | `asset.type` | `image`, `glb` |
 | `output.aspect_ratio` | `9:16`, `16:9`, `1:1` |
 | `output.resolution` | `1080p` |
@@ -207,11 +211,44 @@ the implementation cost is low.
 - `character_intro` requires exactly one `main_subject` asset with `type=image`.
 - `product_orbit` requires exactly one `main_subject` asset with `type=glb`.
 - `assets[].id` must be unique.
-- V0.1 requires exactly one asset and its id must be `main_subject`.
+- `character_birthday` requires version `0.2`, 9:16, and one `main_character:image`.
+- Birthday optional asset IDs are `logo` and `support_image_1..3`, all `image`.
 - Invalid template values fail validation.
 - Invalid asset/template combinations fail validation.
-- `duration` must be from 4 to 20 seconds.
+- `duration` must be from 4 to 30 seconds.
 - `fps` must be 24.
+
+## Character Birthday V0.2
+
+The canonical schema keeps `assets` as a list to remain compatible with the
+existing upload and storage contract. A product-facing object such as
+`assets.main_character` is a UI/view-model concern and is normalized into the
+list before validation.
+
+Required birthday text fields are `character_name`, `birthday_date`, and
+`main_title` (or legacy `title`). `subtitle_lines` accepts up to three non-empty
+strings. `cta` and `copyright` are optional.
+
+`style` fields:
+
+| Field | Default | Meaning |
+|---|---|---|
+| `theme` | `cute_school` | Named product preset |
+| `primary_color` | `#C9414A` | Date, title, name accent |
+| `secondary_color` | `#5967B0` | Background, poster bar, CTA |
+| `background_style` | `soft_poster` | Deterministic background preset |
+| `font_preset` | `birthday_serif` | Actual font resolution preset |
+| `subtitle_preset` | `white_black_stroke` | Readable dialogue token |
+| `particle_preset` | `petal_soft` | Deterministic particle token |
+
+`timeline` contains six `{start,end}` ranges: `opening_date_card`, `name_card`,
+`birthday_title_closeup`, `character_poster`, `character_interaction`, and
+`brand_end_card`. Ranges must be ordered, non-overlapping and within
+`output.duration`. If omitted, they are scaled from the 15-second MVP defaults.
+
+See the complete runnable payload in
+`samples/projects/character_birthday.json` and the product/implementation
+design in `docs/templates/character_birthday_template.md`.
 
 ## Camera Keyframes (Loop 08)
 

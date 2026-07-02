@@ -1,0 +1,285 @@
+{
+  "file": "E:\\cineanchor\\bluearchive\\f560d7c1b64a92efe7df4da74dc6e3c9.mp4",
+  "duration_seconds": 26.9,
+  "width": 592,
+  "height": 1280,
+  "fps": 30.0,
+  "aspect_ratio": "37:80",
+  "video_codec": "hevc",
+  "audio": {
+    "codec": "aac",
+    "sample_rate": 44100,
+    "channels": 1,
+    "channel_layout": "mono",
+    "bit_rate": 48418
+  },
+  "crop": null,
+  "scene_change_seconds": [
+    0.067,
+    1.0,
+    3.067,
+    4.467,
+    14.4,
+    14.6,
+    14.733,
+    14.9,
+    15.067,
+    15.233,
+    15.4,
+    15.533,
+    15.7,
+    15.867,
+    18.867,
+    19.133,
+    19.4,
+    19.567,
+    19.733,
+    20.033,
+    20.2,
+    20.4,
+    22.267,
+    22.5,
+    22.9,
+    23.233,
+    25.433
+  ],
+  "dominant_colors": [
+    {
+      "hex": "#F5F3F4",
+      "share": 0.1566,
+      "hsv": [
+        330.0,
+        0.008,
+        0.961
+      ]
+    },
+    {
+      "hex": "#166793",
+      "share": 0.1543,
+      "hsv": [
+        201.1,
+        0.85,
+        0.576
+      ]
+    },
+    {
+      "hex": "#6793BE",
+      "share": 0.1362,
+      "hsv": [
+        209.7,
+        0.458,
+        0.745
+      ]
+    },
+    {
+      "hex": "#626B9E",
+      "share": 0.123,
+      "hsv": [
+        231.0,
+        0.38,
+        0.62
+      ]
+    },
+    {
+      "hex": "#061621",
+      "share": 0.1217,
+      "hsv": [
+        204.4,
+        0.818,
+        0.129
+      ]
+    },
+    {
+      "hex": "#A6ABC1",
+      "share": 0.1141,
+      "hsv": [
+        228.9,
+        0.14,
+        0.757
+      ]
+    },
+    {
+      "hex": "#C2DAE3",
+      "share": 0.0994,
+      "hsv": [
+        196.4,
+        0.145,
+        0.89
+      ]
+    },
+    {
+      "hex": "#39304E",
+      "share": 0.0948,
+      "hsv": [
+        258.0,
+        0.385,
+        0.306
+      ]
+    }
+  ],
+  "timeline_draft": [
+    {
+      "start": 0.067,
+      "end": 1.0,
+      "duration": 0.933,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 1.0,
+      "end": 3.067,
+      "duration": 2.067,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 3.067,
+      "end": 4.467,
+      "duration": 1.4,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 4.467,
+      "end": 14.4,
+      "duration": 9.933,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 14.4,
+      "end": 14.6,
+      "duration": 0.2,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 14.6,
+      "end": 14.733,
+      "duration": 0.133,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 14.733,
+      "end": 14.9,
+      "duration": 0.167,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 14.9,
+      "end": 15.067,
+      "duration": 0.167,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 15.067,
+      "end": 15.233,
+      "duration": 0.166,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 15.233,
+      "end": 15.4,
+      "duration": 0.167,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 15.4,
+      "end": 15.533,
+      "duration": 0.133,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 15.533,
+      "end": 15.7,
+      "duration": 0.167,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 15.7,
+      "end": 15.867,
+      "duration": 0.167,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 15.867,
+      "end": 18.867,
+      "duration": 3.0,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 18.867,
+      "end": 19.133,
+      "duration": 0.266,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 19.133,
+      "end": 19.4,
+      "duration": 0.267,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 19.4,
+      "end": 19.567,
+      "duration": 0.167,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 19.567,
+      "end": 19.733,
+      "duration": 0.166,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 19.733,
+      "end": 20.033,
+      "duration": 0.3,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 20.033,
+      "end": 20.2,
+      "duration": 0.167,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 20.2,
+      "end": 20.4,
+      "duration": 0.2,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 20.4,
+      "end": 22.267,
+      "duration": 1.867,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 22.267,
+      "end": 22.5,
+      "duration": 0.233,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 22.5,
+      "end": 22.9,
+      "duration": 0.4,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 22.9,
+      "end": 23.233,
+      "duration": 0.333,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 23.233,
+      "end": 25.433,
+      "duration": 2.2,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 25.433,
+      "end": 26.9,
+      "duration": 1.467,
+      "label": "scene-change segment (manual classification required)"
+    }
+  ],
+  "contact_sheet": "contact_sheets/f560d7c1b64a92efe7df4da74dc6e3c9.jpg"
+}

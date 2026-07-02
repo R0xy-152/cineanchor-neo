@@ -13,7 +13,7 @@ from server.services.blender_service import BlenderService
 from server.services.errors import CineAnchorError, ErrorCode
 from server.services.ffmpeg_service import FFmpegService
 from server.services.task_queue import TaskStatus, task_store
-from tests.backend.test_project_schema import character_project
+from tests.backend.test_project_schema import birthday_project, character_project
 
 
 _MOCK_PNG = Path(__file__).resolve().parents[2] / "spikes" / "render_json" / "input" / "hero.png"
@@ -77,6 +77,27 @@ def _wait_for_status(task_id: str, target: frozenset[str], timeout: float = 10) 
 
 
 class GoldenPathSmokeTests(unittest.TestCase):
+    @patch.object(BlenderService, "render_project")
+    @patch.object(FFmpegService, "compose_mp4")
+    @patch.object(FFmpegService, "compose_mp4_with_effects")
+    @patch.object(FFmpegService, "enhance_mp4")
+    def test_character_birthday_uses_standard_non_ai_mp4_path(
+        self,
+        mock_enhance: object,
+        mock_effects: object,
+        mock_compose: object,
+        mock_render: object,
+    ) -> None:
+        status, body = asgi_request("POST", "/api/render", birthday_project())
+        self.assertEqual(status, 200)
+        snap = _wait_for_status(body["task_id"], frozenset({"DONE", "FAILED"}))
+        self.assertEqual(snap["status"], "DONE")
+        self.assertTrue(snap["standard_output_path"].endswith("final.mp4"))
+        mock_render.assert_called_once()
+        mock_compose.assert_called_once()
+        mock_effects.assert_not_called()
+        mock_enhance.assert_not_called()
+
     # ── infrastructure ───────────────────────────────────────────────
 
     def test_server_app_imports_and_health_is_ok(self) -> None:

@@ -26,7 +26,28 @@
             <span class="card-title">产品展示</span>
             <span class="card-desc">GLB 模型 · 环绕展示</span>
           </label>
+          <label class="template-card" data-template="character_birthday">
+            <span class="card-title">角色生日 / 生贺</span>
+            <span class="card-desc">角色 PNG + Logo · 15 秒竖屏成片</span>
+          </label>
         </div>
+      </section>
+
+      <section class="section hidden" id="birthdayAssetSection">
+        <h2 class="section-title">品牌 Logo <span class="hint">PNG，片尾使用</span></h2>
+        <div class="upload-zone" id="logoUploadZone">
+          <input type="file" id="logoFileInput" accept=".png" hidden />
+          <div class="upload-prompt" id="logoUploadPrompt">
+            <span class="upload-icon">+</span>
+            <span>上传透明 PNG Logo</span>
+          </div>
+          <div class="upload-info hidden" id="logoUploadInfo">
+            <span class="file-icon">PNG</span>
+            <span class="file-name" id="logoFileName"></span>
+            <button type="button" class="file-clear" id="logoFileClear">×</button>
+          </div>
+        </div>
+        <p class="error-msg hidden" id="logoUploadError"></p>
       </section>
 
       <!-- Upload zone -->
@@ -48,8 +69,35 @@
         <p class="error-msg hidden" id="uploadError"></p>
       </section>
 
+      <section class="section hidden" id="birthdayFields">
+        <h2 class="section-title">生日模板内容</h2>
+        <div class="param-grid">
+          <label class="param-field">
+            <span>角色名</span>
+            <input type="text" id="characterNameInput" value="DEMO CHARACTER" maxlength="80" />
+          </label>
+          <label class="param-field">
+            <span>生日日期</span>
+            <input type="text" id="birthdayDateInput" value="07.01" maxlength="20" />
+          </label>
+          <label class="param-field param-field-wide">
+            <span>对白字幕（每行一句，最多三句）</span>
+            <textarea id="birthdayDialogueInput" rows="3" maxlength="300">Today is my birthday.
+Thank you for celebrating with me.</textarea>
+          </label>
+          <label class="param-field">
+            <span>主题色</span>
+            <input type="color" id="birthdayPrimaryColor" value="#c9414a" />
+          </label>
+          <label class="param-field">
+            <span>辅助色</span>
+            <input type="color" id="birthdaySecondaryColor" value="#5967b0" />
+          </label>
+        </div>
+      </section>
+
       <!-- Parameters -->
-      <section class="section">
+      <section class="section" id="parameterSection">
         <h2 class="section-title">参数设置</h2>
         <div class="param-grid">
           <label class="param-field">
@@ -97,7 +145,7 @@
       </section>
 
       <!-- Interactive camera (loop 08) -->
-      <section class="section">
+      <section class="section" id="interactiveSection">
         <h2 class="section-title">交互预览 <span class="loop-badge">NEW</span></h2>
         <div class="interactive-row">
           <button class="interactive-btn" id="interactiveBtn" type="button">打开 3D 预览</button>

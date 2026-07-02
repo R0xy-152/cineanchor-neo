@@ -26,10 +26,27 @@ const modeBtns = document.querySelectorAll(".mode-btn");
 const interactiveBtn = document.getElementById("interactiveBtn");
 const interactiveStatus = document.getElementById("interactiveStatus");
 const interactiveClear = document.getElementById("interactiveClear");
+const birthdayAssetSection = document.getElementById("birthdayAssetSection");
+const birthdayFields = document.getElementById("birthdayFields");
+const cameraControlSection = document.getElementById("cameraControlSection");
+const interactiveSection = document.getElementById("interactiveSection");
+const logoUploadZone = document.getElementById("logoUploadZone");
+const logoFileInput = document.getElementById("logoFileInput");
+const logoUploadPrompt = document.getElementById("logoUploadPrompt");
+const logoUploadInfo = document.getElementById("logoUploadInfo");
+const logoFileName = document.getElementById("logoFileName");
+const logoFileClear = document.getElementById("logoFileClear");
+const logoUploadError = document.getElementById("logoUploadError");
+const characterNameInput = document.getElementById("characterNameInput");
+const birthdayDateInput = document.getElementById("birthdayDateInput");
+const birthdayDialogueInput = document.getElementById("birthdayDialogueInput");
+const birthdayPrimaryColor = document.getElementById("birthdayPrimaryColor");
+const birthdaySecondaryColor = document.getElementById("birthdaySecondaryColor");
 
 // ── state ─────────────────────────────────────────────────────────────
 let selectedTemplate = "character_intro";
 let uploadedAsset = null;
+let uploadedLogo = null;
 let taskId = null;
 let pollTimer = null;
 let isPremium = false;
@@ -40,10 +57,11 @@ let interactiveCamera = null;  // loop 08: { shots, keyframes } from viewport
 const TEMPLATE_DEFAULTS = {
   character_intro: { title: "New Hero Arrival", subtitle: "Limited Event", assetLabel: "PNG 图片", accept: ".png" },
   product_orbit: { title: "Product Orbit", subtitle: "GLB Showcase", assetLabel: "GLB 模型", accept: ".glb" },
+  character_birthday: { title: "HAPPY BIRTHDAY", subtitle: "Celebrate now", assetLabel: "角色 PNG", accept: ".png" },
 };
 
 const STATUS_LABELS = {
-  PENDING: "等待开始", RENDERING: "3D 渲染中", COMPOSITING: "视频合成中",
+  PENDING: "等待开始", RENDERING: "模板渲染中", COMPOSITING: "视频合成中",
   ENHANCING: "轻度后期处理中", DONE: "完成", FAILED: "生成失败",
 };
 
@@ -54,7 +72,8 @@ const ERROR_MESSAGES = {
   INVALID_PROJECT_JSON: "渲染参数无效，请检查输入。",
   UNSUPPORTED_TEMPLATE: "不支持的模板。",
   UNSUPPORTED_ASSET_FORMAT: "不支持的素材格式。character_intro 仅支持 PNG，product_orbit 仅支持 GLB。",
-  BLENDER_RENDER_FAILED: "3D 渲染失败，请重试。",
+  BLENDER_RENDER_FAILED: "模板渲染失败，请重试。",
+  ASSET_IMPORT_FAILED: "素材无法读取，请确认 PNG 文件有效。",
   FFMPEG_COMPOSE_FAILED: "视频合成失败，请重试。",
   RENDER_TIMEOUT: "渲染超时，请稍后重试。",
   AI_ENHANCE_SKIPPED: null,
@@ -73,7 +92,15 @@ templateCards.forEach((card) => {
     subtitleInput.value = preset.subtitle;
     assetHint.textContent = preset.assetLabel;
     fileInput.accept = preset.accept;
+    const birthdayMode = selectedTemplate === "character_birthday";
+    birthdayAssetSection.classList.toggle("hidden", !birthdayMode);
+    birthdayFields.classList.toggle("hidden", !birthdayMode);
+    cameraControlSection.classList.toggle("hidden", birthdayMode);
+    interactiveSection.classList.toggle("hidden", birthdayMode);
+    aspectRatio.value = "9:16";
+    aspectRatio.disabled = birthdayMode;
     clearUpload();
+    clearLogoUpload();
     clearInteractiveCamera();
     updateGenerateButton();
   });
@@ -107,7 +134,7 @@ async function handleFile(file) {
   uploadError.classList.add("hidden");
   const expected = TEMPLATE_DEFAULTS[selectedTemplate].accept;
   const ext = "." + file.name.split(".").pop().toLowerCase();
-  if (expected === ".png" && ext !== ".png") { showUploadError("character_intro 仅支持 PNG 图片。"); return; }
+  if (expected === ".png" && ext !== ".png") { showUploadError("当前模板仅支持 PNG 图片。"); return; }
   if (expected === ".glb" && ext !== ".glb") { showUploadError("product_orbit 仅支持 GLB 模型。"); return; }
   const formData = new FormData(); formData.append("file", file);
   try {
@@ -122,6 +149,48 @@ async function handleFile(file) {
 }
 
 function showUploadError(msg) { uploadError.textContent = msg; uploadError.classList.remove("hidden"); }
+
+logoUploadZone.addEventListener("click", (event) => {
+  if (event.target === logoFileClear) return;
+  logoFileInput.click();
+});
+logoFileInput.addEventListener("change", () => {
+  const file = logoFileInput.files[0];
+  if (file) handleLogoFile(file);
+});
+logoUploadZone.addEventListener("dragover", (event) => { event.preventDefault(); logoUploadZone.classList.add("dragover"); });
+logoUploadZone.addEventListener("dragleave", () => { logoUploadZone.classList.remove("dragover"); });
+logoUploadZone.addEventListener("drop", (event) => {
+  event.preventDefault(); logoUploadZone.classList.remove("dragover");
+  const file = event.dataTransfer.files[0];
+  if (file) handleLogoFile(file);
+});
+logoFileClear.addEventListener("click", (event) => { event.stopPropagation(); clearLogoUpload(); });
+
+function clearLogoUpload() {
+  uploadedLogo = null; logoFileInput.value = "";
+  logoUploadPrompt.classList.remove("hidden"); logoUploadInfo.classList.add("hidden");
+  logoUploadError.classList.add("hidden"); updateGenerateButton();
+}
+
+async function handleLogoFile(file) {
+  logoUploadError.classList.add("hidden");
+  if (!file.name.toLowerCase().endsWith(".png")) {
+    logoUploadError.textContent = "Logo 仅支持 PNG。"; logoUploadError.classList.remove("hidden"); return;
+  }
+  const formData = new FormData(); formData.append("file", file);
+  try {
+    const response = await fetch("/api/assets/upload", { method: "POST", body: formData });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Logo 上传失败");
+    uploadedLogo = data; logoFileName.textContent = data.filename;
+    logoUploadPrompt.classList.add("hidden"); logoUploadInfo.classList.remove("hidden");
+    updateGenerateButton();
+  } catch (error) {
+    logoUploadError.textContent = error.message || "Logo 上传失败。";
+    logoUploadError.classList.remove("hidden");
+  }
+}
 
 // ── render mode ───────────────────────────────────────────────────────
 modeBtns.forEach((btn) => {
@@ -154,7 +223,9 @@ function updateInteractiveStatus() {
 
 // ── generate ──────────────────────────────────────────────────────────
 function updateGenerateButton() {
-  if (uploadedAsset) { generateBtn.disabled = false; generateBtn.textContent = isPremium ? "生成精品版视频" : "生成视频"; }
+  const birthdayReady = selectedTemplate !== "character_birthday" || uploadedLogo;
+  if (uploadedAsset && birthdayReady) { generateBtn.disabled = false; generateBtn.textContent = isPremium ? "生成精品版视频" : "生成视频"; }
+  else if (selectedTemplate === "character_birthday" && uploadedAsset && !uploadedLogo) { generateBtn.disabled = true; generateBtn.textContent = "请上传 Logo"; }
   else { generateBtn.disabled = true; generateBtn.textContent = "请先上传素材"; }
 }
 modeBtns.forEach((btn) => { btn.addEventListener("click", updateGenerateButton); });
@@ -172,7 +243,30 @@ generateBtn.addEventListener("click", async () => {
     if (interactiveCamera.keyframes) cameraSpec.keyframes = interactiveCamera.keyframes;
   }
 
-  const projectJSON = {
+  const birthdayMode = selectedTemplate === "character_birthday";
+  const projectJSON = birthdayMode ? {
+    version: "0.2", project_id: crypto.randomUUID(), template: selectedTemplate,
+    output: { duration: 15, fps: 24, aspect_ratio: "9:16", resolution: "1080p" },
+    assets: [
+      { id: "main_character", type: "image", path: uploadedAsset.path },
+      { id: "logo", type: "image", path: uploadedLogo.path },
+    ],
+    camera: { motion: "dolly_in", speed: 1.0, start_distance: 7.2, end_distance: 5.8, height: 1.4, focal_length: 70.0 },
+    scene: { background: "soft_poster", lighting: "flat_graphic", particles: null, fog: false },
+    text: {
+      title: titleInput.value.trim() || "HAPPY BIRTHDAY", subtitle: "", font_style: "birthday_serif",
+      character_name: characterNameInput.value.trim(), birthday_date: birthdayDateInput.value.trim(),
+      main_title: titleInput.value.trim() || "HAPPY BIRTHDAY",
+      subtitle_lines: birthdayDialogueInput.value.split("\n").map((line) => line.trim()).filter(Boolean).slice(0, 3),
+      cta: subtitleInput.value.trim(),
+    },
+    style: {
+      theme: "cute_school", primary_color: birthdayPrimaryColor.value,
+      secondary_color: birthdaySecondaryColor.value, background_style: "soft_poster",
+      font_preset: "birthday_serif", subtitle_preset: "white_black_stroke", particle_preset: "petal_soft",
+    },
+    ai_enhance: { enabled: isPremium, mode: "conservative" },
+  } : {
     version: "0.1", project_id: crypto.randomUUID(), template: selectedTemplate,
     output: { duration: 8, fps: 24, aspect_ratio: aspectRatio.value, resolution: "1080p" },
     assets: [{ id: "main_subject", type: uploadedAsset.type, path: uploadedAsset.path }],

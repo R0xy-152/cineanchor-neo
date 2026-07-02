@@ -1,0 +1,117 @@
+{
+  "file": "E:\\cineanchor\\bluearchive\\e08d20d1cdb5f204af6130ca68b8c0c8.mp4",
+  "duration_seconds": 16.967,
+  "width": 592,
+  "height": 1280,
+  "fps": 30.0,
+  "aspect_ratio": "37:80",
+  "video_codec": "hevc",
+  "audio": {
+    "codec": "aac",
+    "sample_rate": 44100,
+    "channels": 1,
+    "channel_layout": "mono",
+    "bit_rate": 48960
+  },
+  "crop": null,
+  "scene_change_seconds": [
+    0.167,
+    0.233,
+    2.867
+  ],
+  "dominant_colors": [
+    {
+      "hex": "#F7FDFC",
+      "share": 0.1769,
+      "hsv": [
+        170.0,
+        0.024,
+        0.992
+      ]
+    },
+    {
+      "hex": "#53496C",
+      "share": 0.1643,
+      "hsv": [
+        257.1,
+        0.324,
+        0.424
+      ]
+    },
+    {
+      "hex": "#9583A3",
+      "share": 0.1219,
+      "hsv": [
+        273.8,
+        0.196,
+        0.639
+      ]
+    },
+    {
+      "hex": "#CCDBB4",
+      "share": 0.117,
+      "hsv": [
+        83.1,
+        0.178,
+        0.859
+      ]
+    },
+    {
+      "hex": "#E9DFD9",
+      "share": 0.1143,
+      "hsv": [
+        22.5,
+        0.069,
+        0.914
+      ]
+    },
+    {
+      "hex": "#5286D1",
+      "share": 0.1125,
+      "hsv": [
+        215.4,
+        0.608,
+        0.82
+      ]
+    },
+    {
+      "hex": "#13141B",
+      "share": 0.1049,
+      "hsv": [
+        232.5,
+        0.296,
+        0.106
+      ]
+    },
+    {
+      "hex": "#A2C6BF",
+      "share": 0.0881,
+      "hsv": [
+        168.3,
+        0.182,
+        0.776
+      ]
+    }
+  ],
+  "timeline_draft": [
+    {
+      "start": 0.0,
+      "end": 0.167,
+      "duration": 0.167,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 0.233,
+      "end": 2.867,
+      "duration": 2.634,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 2.867,
+      "end": 16.967,
+      "duration": 14.1,
+      "label": "scene-change segment (manual classification required)"
+    }
+  ],
+  "contact_sheet": "contact_sheets/e08d20d1cdb5f204af6130ca68b8c0c8.jpg"
+}

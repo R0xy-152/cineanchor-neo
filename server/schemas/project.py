@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 class Template(str, Enum):
     CHARACTER_INTRO = "character_intro"
     PRODUCT_ORBIT = "product_orbit"
+    CHARACTER_BIRTHDAY = "character_birthday"
 
 
 class AssetType(str, Enum):
@@ -53,7 +54,7 @@ def resolve_dimensions(
 class OutputSpec(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    duration: int = Field(ge=4, le=20)
+    duration: int = Field(ge=4, le=30)
     fps: Literal[24]
     aspect_ratio: AspectRatio
     resolution: Resolution
@@ -177,6 +178,81 @@ class TextSpec(BaseModel):
     title: str = Field(default="", max_length=80)
     subtitle: str = Field(default="", max_length=120)
     font_style: str = Field(min_length=1)
+    character_name: str = Field(default="", max_length=80)
+    birthday_date: str = Field(default="", max_length=20)
+    main_title: str = Field(default="", max_length=80)
+    subtitle_lines: list[str] = Field(default_factory=list, max_length=3)
+    cta: str = Field(default="", max_length=80)
+    copyright: str = Field(default="", max_length=160)
+
+    @model_validator(mode="after")
+    def validate_subtitle_lines(self) -> TextSpec:
+        if any(not line.strip() or len(line) > 100 for line in self.subtitle_lines):
+            raise ValueError("subtitle_lines must contain 1-100 character non-empty strings")
+        return self
+
+
+class BirthdayStyleSpec(BaseModel):
+    """Deterministic visual preset for the character birthday template."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    theme: str = Field(default="cute_school", min_length=1, max_length=40)
+    primary_color: str = Field(default="#C9414A", pattern=r"^#[0-9a-fA-F]{6}$")
+    secondary_color: str = Field(default="#5967B0", pattern=r"^#[0-9a-fA-F]{6}$")
+    background_style: str = Field(default="soft_poster", min_length=1, max_length=40)
+    font_preset: str = Field(default="birthday_serif", min_length=1, max_length=40)
+    subtitle_preset: str = Field(default="white_black_stroke", min_length=1, max_length=40)
+    particle_preset: str = Field(default="petal_soft", min_length=1, max_length=40)
+
+
+class TimeRangeSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    start: float = Field(ge=0)
+    end: float = Field(gt=0)
+
+    @model_validator(mode="after")
+    def validate_order(self) -> TimeRangeSpec:
+        if self.end <= self.start:
+            raise ValueError("timeline range end must be greater than start")
+        return self
+
+
+class BirthdayTimelineSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    opening_date_card: TimeRangeSpec
+    name_card: TimeRangeSpec
+    birthday_title_closeup: TimeRangeSpec
+    character_poster: TimeRangeSpec
+    character_interaction: TimeRangeSpec
+    brand_end_card: TimeRangeSpec
+
+    @classmethod
+    def for_duration(cls, duration: float) -> BirthdayTimelineSpec:
+        # The 15 s MVP rhythm scales cleanly for 27 s custom exports.
+        stops = [0.0, 2.0, 3.0, 5.5, 9.0, 12.5, 15.0]
+        scale = duration / 15.0
+        ranges = [TimeRangeSpec(start=a * scale, end=b * scale) for a, b in zip(stops, stops[1:])]
+        return cls(
+            opening_date_card=ranges[0],
+            name_card=ranges[1],
+            birthday_title_closeup=ranges[2],
+            character_poster=ranges[3],
+            character_interaction=ranges[4],
+            brand_end_card=ranges[5],
+        )
+
+    def ordered_items(self) -> list[tuple[str, TimeRangeSpec]]:
+        return [
+            ("opening_date_card", self.opening_date_card),
+            ("name_card", self.name_card),
+            ("birthday_title_closeup", self.birthday_title_closeup),
+            ("character_poster", self.character_poster),
+            ("character_interaction", self.character_interaction),
+            ("brand_end_card", self.brand_end_card),
+        ]
 
 
 class AIEnhanceSpec(BaseModel):
@@ -190,14 +266,16 @@ class AIEnhanceSpec(BaseModel):
 class ProjectJSON(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    version: str = Field(pattern=r"^0\.1$")
+    version: str = Field(pattern=r"^0\.[12]$")
     project_id: str = Field(min_length=1)
     template: Template
     output: OutputSpec
-    assets: list[AssetSpec] = Field(min_length=1, max_length=1)
+    assets: list[AssetSpec] = Field(min_length=1, max_length=5)
     camera: CameraSpec
     scene: SceneSpec
     text: TextSpec
+    style: BirthdayStyleSpec | None = None
+    timeline: BirthdayTimelineSpec | None = None
     ai_enhance: AIEnhanceSpec = Field(default_factory=AIEnhanceSpec)
 
     @model_validator(mode="after")
@@ -206,12 +284,44 @@ class ProjectJSON(BaseModel):
         if len(asset_ids) != len(set(asset_ids)):
             raise ValueError("asset ids must be unique")
 
-        if asset_ids != ["main_subject"]:
-            raise ValueError("V0.1 requires exactly one asset with id=main_subject")
+        if self.template in {Template.CHARACTER_INTRO, Template.PRODUCT_ORBIT}:
+            if asset_ids != ["main_subject"]:
+                raise ValueError("legacy templates require exactly one asset with id=main_subject")
+            main_asset = self.assets[0]
+            if self.template == Template.CHARACTER_INTRO and main_asset.type != AssetType.IMAGE:
+                raise ValueError("character_intro requires main_subject asset type=image")
+            if self.template == Template.PRODUCT_ORBIT and main_asset.type != AssetType.GLB:
+                raise ValueError("product_orbit requires main_subject asset type=glb")
+            return self
 
-        main_asset = self.assets[0]
-        if self.template == Template.CHARACTER_INTRO and main_asset.type != AssetType.IMAGE:
-            raise ValueError("character_intro requires main_subject asset type=image")
-        if self.template == Template.PRODUCT_ORBIT and main_asset.type != AssetType.GLB:
-            raise ValueError("product_orbit requires main_subject asset type=glb")
+        if self.version != "0.2":
+            raise ValueError("character_birthday requires Project JSON version 0.2")
+        if self.output.aspect_ratio != AspectRatio.NINE_SIXTEEN:
+            raise ValueError("character_birthday requires aspect_ratio=9:16")
+        allowed_ids = {"main_character", "logo", "support_image_1", "support_image_2", "support_image_3"}
+        unknown_ids = set(asset_ids) - allowed_ids
+        if unknown_ids:
+            raise ValueError(f"unsupported character_birthday asset ids: {sorted(unknown_ids)}")
+        if "main_character" not in asset_ids:
+            raise ValueError("character_birthday requires main_character")
+        if any(asset.type != AssetType.IMAGE for asset in self.assets):
+            raise ValueError("character_birthday V0.2 assets must be PNG images")
+        if not self.text.character_name.strip():
+            raise ValueError("character_birthday requires text.character_name")
+        if not self.text.birthday_date.strip():
+            raise ValueError("character_birthday requires text.birthday_date")
+        if not (self.text.main_title.strip() or self.text.title.strip()):
+            raise ValueError("character_birthday requires text.main_title or text.title")
+        if self.style is None:
+            self.style = BirthdayStyleSpec()
+        if self.timeline is None:
+            self.timeline = BirthdayTimelineSpec.for_duration(self.output.duration)
+
+        previous_end = 0.0
+        for name, time_range in self.timeline.ordered_items():
+            if time_range.start < previous_end - 1e-6:
+                raise ValueError(f"timeline component {name} overlaps the previous component")
+            if time_range.end > self.output.duration + 1e-6:
+                raise ValueError(f"timeline component {name} exceeds output.duration")
+            previous_end = time_range.end
         return self

@@ -86,7 +86,75 @@ def product_project() -> dict:
     return project
 
 
+def birthday_project() -> dict:
+    return {
+        "version": "0.2",
+        "project_id": "test-birthday",
+        "template": "character_birthday",
+        "output": {
+            "duration": 15,
+            "fps": 24,
+            "aspect_ratio": "9:16",
+            "resolution": "1080p",
+        },
+        "assets": [
+            {"id": "main_character", "type": "image", "path": "storage/assets/hero.png"},
+        ],
+        "camera": {
+            "motion": "dolly_in", "speed": 1.0, "start_distance": 7.2,
+            "end_distance": 5.8, "height": 1.4, "focal_length": 70.0,
+        },
+        "scene": {
+            "background": "soft_poster", "lighting": "flat_graphic",
+            "particles": None, "fog": False,
+        },
+        "text": {
+            "title": "HAPPY BIRTHDAY", "subtitle": "", "font_style": "birthday_serif",
+            "character_name": "DEMO CHARACTER", "birthday_date": "07.01",
+            "main_title": "HAPPY BIRTHDAY",
+            "subtitle_lines": ["Today is my birthday.", "Thank you for celebrating with me."],
+            "cta": "Celebrate now",
+        },
+        "style": {
+            "theme": "cute_school", "primary_color": "#C9414A",
+            "secondary_color": "#5967B0", "background_style": "soft_poster",
+            "font_preset": "birthday_serif", "subtitle_preset": "white_black_stroke",
+            "particle_preset": "petal_soft",
+        },
+    }
+
+
 class ProjectSchemaTests(unittest.TestCase):
+    def test_valid_character_birthday_schema_passes(self) -> None:
+        project = ProjectJSON.model_validate(birthday_project())
+        self.assertEqual(project.template.value, "character_birthday")
+        self.assertEqual(project.output.dimensions, (1080, 1920))
+        self.assertIsNotNone(project.timeline)
+        self.assertEqual(project.timeline.brand_end_card.end, 15)
+
+    def test_birthday_without_optional_assets_passes(self) -> None:
+        project = ProjectJSON.model_validate(birthday_project())
+        self.assertEqual([asset.id for asset in project.assets], ["main_character"])
+        self.assertFalse(project.ai_enhance.enabled)
+
+    def test_birthday_rejects_landscape_output(self) -> None:
+        payload = birthday_project()
+        payload["output"]["aspect_ratio"] = "16:9"
+        with self.assertRaises(ValidationError):
+            ProjectJSON.model_validate(payload)
+
+    def test_birthday_rejects_missing_required_text(self) -> None:
+        payload = birthday_project()
+        payload["text"]["character_name"] = ""
+        with self.assertRaises(ValidationError):
+            ProjectJSON.model_validate(payload)
+
+    def test_legacy_template_still_rejects_multiple_assets(self) -> None:
+        payload = character_project()
+        payload["assets"].append({"id": "logo", "type": "image", "path": "logo.png"})
+        with self.assertRaises(ValidationError):
+            ProjectJSON.model_validate(payload)
+
     def test_valid_character_intro_schema_passes(self) -> None:
         project = ProjectJSON.model_validate(character_project())
         self.assertEqual(project.template.value, "character_intro")

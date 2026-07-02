@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import ValidationError
 
 from server.config import REPO_ROOT, settings
-from server.schemas.project import ProjectJSON
+from server.schemas.project import ProjectJSON, Template
 from server.services.blender_service import BlenderService
 from server.services.errors import CineAnchorError, ErrorCode, error_payload
 from server.services.ffmpeg_service import FFmpegService
@@ -170,7 +170,11 @@ def _execute_render(task_id: str) -> None:
             message="FFmpeg composition is running.",
         )
 
-        if project.scene.particles and project.scene.particles.enabled:
+        if (
+            project.template != Template.CHARACTER_BIRTHDAY
+            and project.scene.particles
+            and project.scene.particles.enabled
+        ):
             # Enhanced composition with vignette + particle/bokeh overlays
             particles = project.scene.particles
             FFmpegService.compose_mp4_with_effects(

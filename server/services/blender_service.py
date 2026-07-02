@@ -6,7 +6,8 @@ import subprocess
 from pathlib import Path
 
 from server.config import settings, REPO_ROOT
-from server.schemas.project import ProjectJSON
+from server.schemas.project import ProjectJSON, Template
+from server.services.birthday_renderer import BirthdayFrameRenderer
 from server.services.errors import CineAnchorError, ErrorCode
 
 logger = logging.getLogger(__name__)
@@ -25,17 +26,18 @@ class BlenderService:
         timeout: int = 900,
     ) -> None:
         # ── resolve asset path ──────────────────────────────────────
-        asset_path_text = project.assets[0].path
-        asset_path = Path(asset_path_text)
-        if not asset_path.is_absolute():
-            asset_path = settings.STORAGE_DIR / asset_path
-        asset_path = asset_path.resolve()
-
-        if not asset_path.exists():
-            raise CineAnchorError(
-                ErrorCode.ASSET_NOT_FOUND,
-                f"Asset not found: {asset_path}",
-            )
+        asset_paths: dict[str, Path] = {}
+        for asset in project.assets:
+            asset_path = Path(asset.path)
+            if not asset_path.is_absolute():
+                asset_path = settings.STORAGE_DIR / asset_path
+            asset_path = asset_path.resolve()
+            if not asset_path.exists():
+                raise CineAnchorError(
+                    ErrorCode.ASSET_NOT_FOUND,
+                    f"Asset not found: {asset_path}",
+                )
+            asset_paths[asset.id] = asset_path
 
         # ── write project file ──────────────────────────────────────
         project_dir = settings.PROJECTS_DIR / task_id
@@ -49,6 +51,17 @@ class BlenderService:
         # ── prepare output ──────────────────────────────────────────
         width, height = project.output.dimensions
         frames_dir = settings.RENDERS_DIR / task_id / "frames"
+
+        if project.template == Template.CHARACTER_BIRTHDAY:
+            BirthdayFrameRenderer.render(project, frames_dir, asset_paths)
+            logger.info(
+                "Birthday frame render complete for task %s, frames in %s",
+                task_id,
+                frames_dir,
+            )
+            return
+
+        asset_path = asset_paths["main_subject"]
 
         # ── build command ───────────────────────────────────────────
         command = [

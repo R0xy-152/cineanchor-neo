@@ -1,0 +1,123 @@
+{
+  "file": "E:\\cineanchor\\bluearchive\\806adc41b74dfe2066eed8b3638bb449.mp4",
+  "duration_seconds": 17.6,
+  "width": 592,
+  "height": 1280,
+  "fps": 30.0,
+  "aspect_ratio": "37:80",
+  "video_codec": "hevc",
+  "audio": {
+    "codec": "aac",
+    "sample_rate": 44100,
+    "channels": 1,
+    "channel_layout": "mono",
+    "bit_rate": 48756
+  },
+  "crop": null,
+  "scene_change_seconds": [
+    10.267,
+    11.6,
+    16.067
+  ],
+  "dominant_colors": [
+    {
+      "hex": "#5F3E4B",
+      "share": 0.1524,
+      "hsv": [
+        336.4,
+        0.347,
+        0.373
+      ]
+    },
+    {
+      "hex": "#FCF6E6",
+      "share": 0.1422,
+      "hsv": [
+        43.6,
+        0.087,
+        0.988
+      ]
+    },
+    {
+      "hex": "#D9BEB0",
+      "share": 0.1312,
+      "hsv": [
+        20.5,
+        0.189,
+        0.851
+      ]
+    },
+    {
+      "hex": "#E9E4DC",
+      "share": 0.1186,
+      "hsv": [
+        36.9,
+        0.056,
+        0.914
+      ]
+    },
+    {
+      "hex": "#A77985",
+      "share": 0.1185,
+      "hsv": [
+        344.3,
+        0.275,
+        0.655
+      ]
+    },
+    {
+      "hex": "#AFA7A5",
+      "share": 0.1181,
+      "hsv": [
+        12.0,
+        0.057,
+        0.686
+      ]
+    },
+    {
+      "hex": "#71646E",
+      "share": 0.1141,
+      "hsv": [
+        313.8,
+        0.115,
+        0.443
+      ]
+    },
+    {
+      "hex": "#171518",
+      "share": 0.1049,
+      "hsv": [
+        280.0,
+        0.125,
+        0.094
+      ]
+    }
+  ],
+  "timeline_draft": [
+    {
+      "start": 0.0,
+      "end": 10.267,
+      "duration": 10.267,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 10.267,
+      "end": 11.6,
+      "duration": 1.333,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 11.6,
+      "end": 16.067,
+      "duration": 4.467,
+      "label": "scene-change segment (manual classification required)"
+    },
+    {
+      "start": 16.067,
+      "end": 17.6,
+      "duration": 1.533,
+      "label": "scene-change segment (manual classification required)"
+    }
+  ],
+  "contact_sheet": "contact_sheets/806adc41b74dfe2066eed8b3638bb449.jpg"
+}

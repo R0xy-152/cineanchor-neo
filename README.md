@@ -68,6 +68,7 @@ scripts\run_tests.bat
 |---|---|---|---|
 | character_intro | PNG (transparent) | dolly_in | Character entrance with title overlay |
 | product_orbit | GLB (3D model) | dolly_in / orbit | Product showcase with tunable camera |
+| character_birthday | PNG character + optional PNG Logo/cards | template-controlled | 15 s vertical birthday/promo package |
 
 Camera params (`height`, `start_distance`, `end_distance`, `focal_length`) are
 now wired into Blender. Both templates support configurable lighting overrides
@@ -169,6 +170,31 @@ See `docs/spike_results.md` for detailed spike data and `docs/portfolio_v0_1_rev
 - In-memory task store (lost on server restart)
 - Single-threaded rendering (one task at a time)
 - Font style selection not yet wired (Blender uses default font)
+
+`character_birthday` is the V0.2 exception to the last item: its
+`birthday_serif` font preset is wired into the deterministic 2D compositor.
+Legacy Blender text still uses the Blender default font.
+
+## Character Birthday V0.2
+
+Select **角色生日 / 生贺** in the Web UI, upload a character PNG and Logo,
+enter the name/date/title/dialogue and choose two theme colors. The default
+output is a deterministic 15-second 1080×1920 MP4. BGM, AI and gameplay clips
+are not required.
+
+CLI sample render:
+
+```powershell
+$env:PYTHONPATH=(Get-Location).Path
+python scripts\render_birthday_sample.py `
+  --character C:\assets\character.png `
+  --logo C:\assets\logo.png `
+  --output C:\exports\birthday.mp4 `
+  --ffmpeg C:\tools\ffmpeg.exe
+```
+
+Design, component and schema details:
+`docs/templates/character_birthday_template.md`.
 
 ## What's New
 
