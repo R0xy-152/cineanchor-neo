@@ -938,7 +938,8 @@ def add_keyframed_camera(
     first = frames[0]
     camera.location = first["pos"]
     camera.rotation_mode = "QUATERNION"
-    camera.rotation_quaternion = first["quat"]
+    q = first["quat"]
+    camera.rotation_quaternion = (q[3], q[0], q[1], q[2])  # (w,x,y,z) — _qfl returns [x,y,z,w]
 
     scene.camera = camera
 
@@ -949,7 +950,8 @@ def add_keyframed_camera(
         if frame_num > scene.frame_end:
             break
         camera.location = fr["pos"]
-        camera.rotation_quaternion = fr["quat"]
+        q = fr["quat"]
+        camera.rotation_quaternion = (q[3], q[0], q[1], q[2])
         camera.keyframe_insert(data_path="location", frame=frame_num)
         camera.keyframe_insert(
             data_path="rotation_quaternion", frame=frame_num,
