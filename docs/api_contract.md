@@ -171,6 +171,34 @@ color-reference analysis.
   `warning_code=AI_ENHANCE_SKIPPED` and the standard MP4 is returned.
 - ComfyUI is **not** part of the V0.1 enhancement path; it is a future hook only.
 
+## Keyframe Endpoints (Loop 08)
+
+`POST /api/keyframes`
+
+Receives recorded camera keyframes from the interactive 3D viewport. Body: array of shot objects.
+
+```json
+[{
+  "index": 0,
+  "keyframes": [
+    {"t": 0.0, "pos": [0, -5, 2], "quat": [0, 0, 0, 1], "fov": 50}
+  ],
+  "cut": false
+}]
+```
+
+Response: `{"status": "ok", "shots": 1, "keyframes": 4}`
+
+---
+
+`GET /api/keyframes`
+
+Returns the most recently POSTed keyframes (in-memory only, lost on restart).
+
+Response: `{"keyframes": [{...}]}`
+
+---
+
 ## Asset Upload
 
 `POST /api/assets/upload`

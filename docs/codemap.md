@@ -25,15 +25,33 @@ cineanchor-neo/
 │   └── scripts/
 │       ├── render_project.py    # Production Blender script (Eevee, templates, layers)
 │       └── render_defaults.py   # Single source of truth for hardcoded defaults
+├── blender/
+│   └── scripts/
+│       ├── render_project.py    # Production Blender script (Eevee, templates, layers)
+│       ├── render_defaults.py   # Single source of truth for hardcoded defaults
+│       ├── camera_math.py       # Catmull-Rom + SLERP interpolation
+│       └── camera_presets.py    # 8 cinematic camera presets
 ├── apps/
 │   └── web/                     # Static frontend (zero-build HTML/CSS/JS, Chinese)
+│       ├── index.html           #   Main UI
+│       ├── viewport.html        #   Loop 08 interactive 3D viewport
+│       └── src/
+│           ├── camera_math.js   #   Catmull-Rom + SLERP (JS port)
+│           ├── camera_presets.js#   8 cinematic presets (JS port)
+│           ├── fitter.js        #   RDP + angle filter keyframe fitting
+│           ├── input_controller.js # Keyboard/mouse flight input
+│           ├── recorder.js      #   Keyframe recording + hard-cut support
+│           └── viewport.js      #   Three.js scene + fly camera + recording
 ├── tests/
-│   ├── backend/                 # Unit tests (unittest) — 72 tests
-│   └── smoke/                   # ASGI integration tests
+│   ├── backend/                 # Unit tests (unittest) — 106 tests
+│   ├── frontend/                # Viewport JS unit tests — 20 tests
+│   ├── parity/                  # JS vs Python cross-check — 15 tests
+│   └── smoke/                   # ASGI integration tests — 13 tests
 ├── spikes/                      # R&D spike archives (read-only reference)
 │   └── ai_benchmark/            #   AI method search benchmark package
 ├── docs/                        # Documentation
 │   ├── adr/                     #   Architecture Decision Records
+│   ├── api_contract.md          #   Full API endpoint contracts
 │   ├── scope.md                 #   Scope & boundaries
 │   ├── codemap.md               #   This file
 │   ├── parameters.md            #   Parameter table (JSON → Blender)
@@ -99,7 +117,8 @@ ProjectJSON
 ├── template: character_intro | product_orbit
 ├── output: {duration, fps: 24, aspect_ratio, resolution}
 ├── assets: [exactly 1, id="main_subject", type=image|glb]
-├── camera: {motion, speed, start_distance, end_distance, height, focal_length}
+├── camera: {motion, speed, start_distance, end_distance, height, focal_length,
+│           preset?, keyframes?, shots?}  # preset=preset camera, keyframes/shots=interactive
 ├── scene: {background, lighting, particles?, fog, background_enhance?,
 │           model_transform?, lighting_overrides?}
 ├── text: {title?, subtitle?, font_style}

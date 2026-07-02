@@ -36,7 +36,7 @@
 - Local-only: no cloud, no Docker, no Redis, no Celery
 - In-memory task store (lost on restart — acceptable for V0.1)
 - Single-threaded rendering (one task at a time)
-- `unittest` framework (NOT pytest), 72+ tests
+- `unittest` framework (NOT pytest), 154 tests
 
 ## Out of scope (never, unless explicitly rescoped)
 
@@ -47,7 +47,7 @@
 - Ecommerce batch generation
 - Unreal Engine backend
 - Frame-by-frame AI video redraw (see ADR-004)
-- WYSIWYG preview parity (Three.js vs Blender)
+- Guaranteed pixel-level WYSIWYG preview parity (Three.js vs Blender)
 - Celery + Redis queues
 - CI/CD pipeline / Docker / containerization
 
@@ -58,8 +58,8 @@
 - User accounts or project history
 - GLB decimation (large models may time out)
 - Automatic background removal for non-transparent PNGs
-- Real-time 3D preview
-- Web UI mounted on `server.main:app` (available via legacy `server/app.py`)
+- Real-time 3D preview (via interactive viewport — experimental in V0.1)
+- Web UI mounted on `server.main:app` (resolved — `/web/` served by main app)
 
 ## Hard rules (never bypass)
 
@@ -82,4 +82,4 @@
 
 ## Current strategic state
 
-V0.1 RC **passed functional verification** (72 tests, golden smoke). Standard render path stable. Parameter decoupling complete: model transform, lighting overrides, camera params now configurable via JSON. Loop-06 mass production (3 weapons × ≥2 camera moves) complete — base videos with Seedance prompts ready for 2b generality validation. AI enhancement is the current R&D focus.
+V0.1 RC **passed functional verification** (154 tests, all gates). Loop 08 complete: interactive camera control with browser Three.js viewport, keyframe recording, RDP fitting, and full render pipeline integration. All 8 gates passed. 启鸣签收 2026-07-02.

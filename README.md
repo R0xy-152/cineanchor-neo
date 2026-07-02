@@ -2,7 +2,7 @@
 
 Generate 8–15 second game promotion videos from PNG images or GLB models.
 
-**Stage:** V0.1 — Loop 06 Complete (parameter decoupling + mass production)
+**Stage:** V0.1 — Loop 08 Complete (interactive camera control)
 
 ## What is CineAnchor?
 
@@ -113,6 +113,8 @@ graph TD
 | POST | `/api/render` | Submit Project JSON for rendering |
 | GET | `/api/render/{id}/status` | Poll render status |
 | GET | `/api/render/{id}/download` | Download MP4 |
+| POST | `/api/keyframes` | Save recorded camera keyframes from viewport |
+| GET | `/api/keyframes` | Retrieve saved viewport keyframes |
 
 Full contract: `docs/api_contract.md`
 
@@ -159,7 +161,7 @@ See `docs/spike_results.md` for detailed spike data and `docs/portfolio_v0_1_rev
 
 ## Current Limitations
 
-- No real-time 3D preview
+- Real-time 3D preview via interactive viewport (`apps/web/viewport.html`) — experimental
 - No BGM upload
 - No user accounts or project history
 - No GLB decimation — large models may time out
@@ -168,19 +170,21 @@ See `docs/spike_results.md` for detailed spike data and `docs/portfolio_v0_1_rev
 - Single-threaded rendering (one task at a time)
 - Font style selection not yet wired (Blender uses default font)
 
-## What's New in Loop 06
+## What's New
 
-- **Parameter decoupling**: model transform (location/rotation/scale), per-light
-  overrides, camera params now configurable via JSON — no code changes needed.
-- **Stage toggles**: ring, glints, cloth texture, text overlay can be
-  enabled/disabled in `scene.background_enhance`.
-- **Mass production**: 3 base videos (text-free, particle-free) with Seedance
-  prompts at `docs/seedance_prompts.md`. Output under `storage/exports/mass_produce/`.
-- **Loop 08 interactive camera control**: browser Three.js viewport with
-  keyboard/mouse flight, recording with hard-cut support, RDP + angle filter
-  keyframe fitting, and full render pipeline integration.
-- **150 tests** (103 backend + 13 smoke + 24 parity + 20 frontend + 3 schema + 2 smoke), all passing.
-- See `AGENTS.md` for the full Loop 08 change report.
+### Loop 08 — Interactive Camera Control
+- Browser Three.js viewport with keyboard/mouse flight, recording with hard-cut support
+- RDP + angle filter keyframe fitting, full render pipeline integration
+- Interactive keyframe recording via `GET/POST /api/keyframes`
+- 4 oracle tests (Three.js → Blender cross-check)
+- See `AGENTS.md` for full change report
+
+### Loop 06 — Parameter Decoupling
+- Model transform (location/rotation/scale), per-light overrides, camera params
+- Stage toggles: ring, glints, cloth texture, text overlay
+- Mass production: 3 base videos with Seedance prompts
+
+**154 tests** all passing.
 
 ## Development Workflow
 
@@ -213,41 +217,3 @@ are designed to be executed by AI agents following the rules in AGENTS.md.
 [to be determined]
 
 ---
-
-## Legacy Spike Commands
-
-<details>
-<summary>Route 3 & 4 historical spike scripts (click to expand)</summary>
-
-### Route 4 Local Web Spike (Legacy)
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r server\requirements.txt
-$env:BLENDER_PATH="C:\Program Files\Blender Foundation\Blender 5.1\blender.exe"
-$env:FFMPEG_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffmpeg.exe"
-.\.venv\Scripts\python.exe -m uvicorn server.app:app --host 127.0.0.1 --port 8000
-.\.venv\Scripts\python.exe server\smoke_web_chain.py
-```
-
-### Route 3 Direct Img2Img Spike (FAILED — text corruption)
-
-```powershell
-$env:COMFYUI_API_URL="http://127.0.0.1:8188"
-$env:FFMPEG_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffmpeg.exe"
-$env:FFPROBE_PATH="E:\cineanchor\.tools\ffmpeg\ffmpeg-8.1.1-essentials_build\bin\ffprobe.exe"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\spikes\comfy_enhance\run_spike.ps1
-```
-
-### Route 3 Conservative (ComfyUI reference + FFmpeg — PARTIAL)
-
-```powershell
-$env:COMFYUI_API_URL="http://127.0.0.1:8188"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\spikes\comfy_lut_enhance\extract_keyframes.ps1
-.\.venv\Scripts\python.exe .\spikes\comfy_lut_enhance\run_comfy_reference.py --timeout-seconds 1200
-.\.venv\Scripts\python.exe .\spikes\comfy_lut_enhance\analyze_color_reference.py
-powershell -NoProfile -ExecutionPolicy Bypass -File .\spikes\comfy_lut_enhance\apply_ffmpeg_enhance.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\spikes\comfy_lut_enhance\make_comparisons.ps1
-```
-
-</details>

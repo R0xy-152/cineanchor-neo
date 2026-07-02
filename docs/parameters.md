@@ -136,6 +136,22 @@ SPOT 光源，仅 `character_intro` 模板有效。位于主体后上方，打�
 
 当 `preset` 非 `null` 时，`motion`/`start_distance`/`end_distance`/`height` 字段保留（向后兼容）但被忽略；相机使用 PERSP 镜头 + 多关键帧轨迹。
 
+### 3.2 交互式关键帧（`camera.keyframes` / `camera.shots`，Loop 08）
+
+通过浏览器 Three.js viewport 录制并自动保存的相机轨迹。当 `keyframes` 或 `shots` 存在时，忽略 `motion` / `preset`，走交互式 PERSP 相机路径。
+
+| JSON 路径 | 含义 | 类型 | 示例 |
+|-----------|------|------|------|
+| `camera.keyframes` | 单镜头关键帧列表 | `[{t, pos, quat, fov}]` 或 `null` | `[{"t":0,"pos":[0,-5,2],"quat":[0,0,0,1],"fov":50}]` |
+| `camera.keyframes[].t` | 时间位置（秒） | `float` | `0.0` |
+| `camera.keyframes[].pos` | 相机世界坐标 | `[x, y, z]` | `[0, -5, 2]` |
+| `camera.keyframes[].quat` | 相机旋转四元数 | `[x, y, z, w]` | `[0, 0, 0, 1]` |
+| `camera.keyframes[].fov` | 视场角（度） | `float` | `50.0` |
+| `camera.shots` | 多镜头分段列表 | `[{index, keyframes, cut}]` 或 `null` | `[{"index":0,"keyframes":[...],"cut":false}]` |
+| `camera.shots[].cut` | 硬切标记 | `bool` | `true` = 瞬切，`false` = 过渡动画 |
+
+**注意：** 关键帧四元数使用 `[x, y, z, w]` 内部约定。写入 Blender `rotation_quaternion` 时需转换为 `(w, x, y, z)`。
+
 ---
 
 ## 4. 文本控制（`text` & `scene.background_enhance.text_overlay`）
