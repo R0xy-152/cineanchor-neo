@@ -46,4 +46,8 @@ This forces a decision the V0.2 vision (§4.1 "camera engine internalized as tem
 | `character_intro` | Blender Eevee | camera engine (presets / keyframes) | golden-pose oracle (`tests/parity/`) |
 | `product_orbit` | Blender Eevee | camera engine (orbit) | golden-pose oracle |
 | `character_birthday` | Pillow 2D compositor | 2D scale/pan keyframes | pixel-diff determinism test (loop 10 WI-4, to build) |
-| `weapon_skin_showcase` (loop 11) | TBD — PNG 2.5D → 2D+; GLB 3D → Blender + camera engine | TBD | TBD |
+| `weapon_skin_showcase` (loop 11, in plan) | Blender Eevee + camera engine (BOTH paths) — GLB → mesh; PNG 2.5D → textured plane | camera engine (presets/keyframes) + deterministic light sweep | golden-pose oracle (3D transform) + pixel-diff (lighting/particles) |
+
+## Update 2026-07-02 — weapon-skin row decided (启鸣: GLB + PNG both in-scope)
+
+启鸣 required BOTH the GLB 3D path and the PNG 2.5D path for `weapon_skin_showcase` in loop 11 (superseding the requirements' GLB deferral). Both paths render through **Blender Eevee + the camera engine** (PNG 2.5D = textured plane in the 3D scene, lit + camera light-sweep — NOT flat Pillow compositing, which stays reserved for `character_birthday`'s poster content). Asset-type sub-dispatch (GLB mesh vs PNG plane) lives inside the single template branch; the camera engine (moat, T2) is exercised here for the first time in a template, and is oracle-guarded (ADR-008). Detail in `11-weapon-skin-showcase-template-plan.md`.
