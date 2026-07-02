@@ -1,0 +1,28 @@
+{
+  "template": "character_intro",
+  "assets": [
+    {
+      "id": "main_subject",
+      "type": "image",
+      "path": "input/hero.png"
+    }
+  ],
+  "camera": {
+    "motion": "dolly_out",
+    "speed": 2.0
+  },
+  "output": {
+    "duration": 2,
+    "fps": 24
+  },
+  "text": {
+    "title": "暗影刺客",
+    "subtitle": "全新赛季 即刻开战"
+  },
+  "particles": {
+    "enabled": true,
+    "color": "#FF8C2E",
+    "count": 60,
+    "speed": 2.5
+  }
+}

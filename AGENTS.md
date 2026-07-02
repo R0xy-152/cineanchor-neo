@@ -2,9 +2,13 @@
 
 ## Project Stage
 
-CineAnchor Neo is currently in the **Spike validation stage**.
+CineAnchor Neo is currently in **V0.1 — Loop 08 CC Execution Complete**.
 
-The goal of Spike is to answer whether the technical chain can work, not to build the production application. Spike code may be temporary and disposable.
+Spike validation (Routes 0–4) is finished: Routes 0/1/2/4 PASS, Route 3 PARTIAL.
+Loop 06 (parameter decoupling + semi-manual mass production) is complete.
+Loop 07 (camera trajectory engine — Catmull-Rom + SLERP + 8 presets) is complete.
+Loop 08 (interactive camera control — browser Three.js viewport + recording + keyframe fitting) is complete, pending 启明 visual gate acceptance.
+150 tests pass (103 backend + 13 smoke + 24 parity + 20 frontend + 3 schema + 2 smoke).
 
 Do not build the full product architecture before the Spike conclusions are recorded.
 
@@ -118,28 +122,30 @@ Kill criterion:
 
 Question: Can one JSON file drive template, asset path, camera motion, duration, fps, aspect ratio, title, and subtitle?
 
-Use this minimal Project JSON only for Spike:
+Current V0.1 Project JSON schema (see `server/schemas/project.py` for full definition):
 
 ```json
 {
+  "version": "0.1",
+  "project_id": "demo",
   "template": "character_intro",
-  "asset_type": "image",
-  "asset_path": "input/hero.png",
-  "camera_motion": "dolly_in",
-  "duration": 8,
-  "fps": 24,
-  "aspect_ratio": "9:16",
-  "title": "New Hero Arrival",
-  "subtitle": "Limited Event"
+  "output": {"duration": 8, "fps": 24, "aspect_ratio": "9:16", "resolution": "1080p"},
+  "assets": [{"id": "main_subject", "type": "image", "path": "storage/assets/hero.png"}],
+  "camera": {"motion": "dolly_in", "speed": 1.0, "start_distance": 7.2, "end_distance": 5.8, "height": 0.25, "focal_length": 1.0},
+  "scene": {"background": "dark_stage", "lighting": "rim_back", "particles": null, "fog": false},
+  "text": {"title": "New Hero", "subtitle": "Limited Event", "font_style": "bold_game"}
 }
 ```
+
+Optional fields (loop 06): `scene.model_transform`, `scene.lighting_overrides`,
+`scene.background_enhance` (rim_light, cloth_texture, glints, text_overlay, stage_ring).
 
 Pass criteria:
 
 - changing `asset_path` switches input without code changes
-- changing `camera_motion` changes camera behavior
+- changing `camera.motion` / `camera.height` / `camera.start_distance` changes camera behavior
 - changing `aspect_ratio` changes output dimensions
-- three template names can be exercised: `character_intro`, `product_orbit`, `prop_showcase`
+- two template names are supported: `character_intro`, `product_orbit`
 
 ### Route 3: ComfyUI AI Enhancement
 
@@ -210,4 +216,58 @@ commands_run:
 
 known_risks:
 - risk summary
+```
+
+## Loop 08 Change Report (CC — 2026-07-01)
+
+```md
+Changed:
+
+files_modified:
+- apps/web/src/camera_math.js (hard-cut boundary support: k0/k3 clamped at cut KFs)
+- blender/scripts/camera_math.py (hard-cut boundary support: same logic, parity with JS)
+- apps/web/src/viewport.js (refactored: extracted input/recorder/fitter to sub-modules)
+- docs/project_json_schema.md (cut field + Camera Keyframes + Hard-Cut Semantics sections)
+- AGENTS.md (this report)
+- .claude/CLAUDE.md (loop-08 status + CC rules update)
+
+files_created:
+- apps/web/src/input_controller.js (keyboard/mouse flight, speed HUD — THREE injected)
+- apps/web/src/recorder.js (recording state machine, pure JS, testable without browser)
+- apps/web/src/fitter.js (RDP + angle filter, pure JS, dense→sparse keyframes)
+- tests/frontend/test_fitter.py (8 tests: RDP, angle filter, cut boundaries, serialization)
+- tests/frontend/test_recorder.py (12 tests: state machine, sample capture, module structure)
+- scripts/visual_gate_loop08.py (Blender + FFmpeg parity verification script)
+
+files_not_touched (per G3 guardrail):
+- blender/scripts/render_project.py (no changes — already supported keyframes/shots)
+- server/services/blender_service.py (no changes)
+- server/routes/render.py (no changes)
+- server/schemas/project.py (no changes — keyframes/shots already in schema)
+
+behavior_changed:
+- interpolateKeyframes (JS+Python): cut:true keyframes prevent Catmull-Rom window
+  from crossing shot boundaries. Backward-compatible: KFs without cut behave same.
+- viewport.js: recording now delegates to recorder.js + fitter.js modules
+- fitter: placeholder Nth-sample replaced with RDP + angle filter
+
+api_changed: no
+schema_changed: no (CameraSpec.keyframes/shots already existed; new cut field is optional bool)
+
+tests_added:
+- tests/frontend/test_fitter.py (8 tests)
+- tests/frontend/test_recorder.py (12 tests)
+- tests/parity/test_camera_math_parity.py HardCutTests (5 tests)
+- tests/backend/test_project_schema.py (3 tests: keyframes/shots/cut schema)
+- tests/smoke/test_golden_path.py (2 tests: render with keyframes, render with shots)
+
+commands_run:
+- python -m unittest discover -s tests: 150 tests, OK
+- All parity tests pass (JS↔Python cross-check including cut boundaries)
+
+known_risks:
+- R4 (mouse-button overload): recording uses keyboard L/R, not mouse left/right.
+  Per Andy plan: CC settled on keeping keyboard L/R (decision A1).
+- Visual parity gate (Task 5): script ready, actual visual inspection pending 启鸣 review.
+  Human must compare Three.js preview vs Blender render screenshots.
 ```

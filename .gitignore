@@ -1,12 +1,19 @@
 # Storage (runtime data, not in git)
 storage/
+.tools/
+.tmp/
 
 # Spike outputs
 spikes/**/output/
+spikes/**/frames/
 spikes/**/input/*.glb
 spikes/**/input/*.png
 spikes/**/input/*.jpg
 spikes/**/input/*.jpeg
+
+# Sample assets (keep README, exclude binary assets)
+samples/assets/*.png
+samples/assets/*.glb
 
 # Rendered video
 *.mp4
@@ -16,6 +23,7 @@ spikes/**/input/*.jpeg
 # Blender backup files
 *.blend1
 *.blend2
+optix7cache.db
 
 # Python
 __pycache__/
@@ -53,3 +61,8 @@ Thumbs.db
 # Database
 *.sqlite
 *.sqlite3
+*.bak
+
+*.bak
+*.p3
+*.pre_p3

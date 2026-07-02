@@ -1,0 +1,39 @@
+- generic [active] [ref=f2e1]:
+  - generic:
+    - generic: 00:00
+  - generic:
+    - generic:
+      - generic: W
+      - generic: A
+      - generic: S
+      - generic: D
+      - text: 移动
+    - generic:
+      - generic: Space
+      - text: /
+      - generic: Ctrl
+      - text: 上升/下降
+    - generic:
+      - generic: Shift
+      - text: 减速 ·
+      - generic: Tab
+      - text: 加速
+    - generic: 鼠标 环视 · 滚轮 推拉
+    - generic: 左键 录制/停止 · 右键 暂停
+    - generic:
+      - generic: P
+      - text: 截图 ·
+      - generic: Esc
+      - text: 退出
+  - generic:
+    - generic:
+      - generic: 速度
+      - generic: "1.0"
+      - generic: x
+    - generic:
+      - generic: FPS
+      - generic: "--"
+    - generic:
+      - generic: FOV
+      - generic: 55°
+  - generic: Loading... 100%

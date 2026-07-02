@@ -1,0 +1,28 @@
+{
+  "template": "product_orbit",
+  "assets": [
+    {
+      "id": "main_subject",
+      "type": "glb",
+      "path": "storage/assets/after_moved.glb"
+    }
+  ],
+  "camera": {
+    "motion": "dolly_out",
+    "speed": 1.5
+  },
+  "output": {
+    "duration": 4,
+    "fps": 24
+  },
+  "text": {
+    "title": "暗影刺客",
+    "subtitle": "全新赛季 即刻开战"
+  },
+  "particles": {
+    "enabled": true,
+    "color": "#FF8C2E",
+    "count": 150,
+    "speed": 2.0
+  }
+}

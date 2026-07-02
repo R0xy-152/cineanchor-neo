@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineAnchor — 交互预览</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0f;
+    color: #e0e0e0;
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #viewport {
+    position: fixed;
+    inset: 0;
+    cursor: default;
+  }
+  #viewport.fly {
+    cursor: none;
+  }
+
+  /* ── HUD ─────────────────────────────────── */
+  #hud {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    background: rgba(10,10,20,0.85);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 13px;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .hud-item { display: flex; align-items: center; gap: 6px; }
+  .hud-label { color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .hud-value { color: #fff; font-variant-numeric: tabular-nums; font-family: "SF Mono","Cascadia Code","Consolas",monospace; }
+  .hud-sep { width: 1px; height: 20px; background: rgba(255,255,255,0.15); }
+
+  /* Speed bar */
+  #speed-bar-wrap { width: 80px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+  #speed-bar-fill { height: 100%; background: linear-gradient(90deg, #55EEFF, #FF59A6); border-radius: 2px; transition: width 0.15s; }
+
+  /* Recording indicator */
+  #rec-indicator {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(10,10,20,0.85);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  #rec-indicator.active { opacity: 1; border-color: #e04040; }
+  #rec-indicator.paused { opacity: 1; border-color: #f0a040; }
+  #rec-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #e04040;
+  }
+  #rec-indicator.paused #rec-dot { background: #f0a040; }
+  .rec-blink { animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* Controls help */
+  #help {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(10,10,20,0.85);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 11px;
+    line-height: 1.8;
+    color: #aaa;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  #help.visible { opacity: 1; }
+  #help kbd {
+    display: inline-block;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 10px;
+    color: #ddd;
+    min-width: 16px;
+    text-align: center;
+  }
+
+  /* Frame guide */
+  #frame-guide {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #frame-rect {
+    border: 1px solid rgba(255,255,255,0.25);
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
+  }
+</style>
+</head>
+<body>
+
+<canvas id="viewport"></canvas>
+
+<!-- Recording indicator -->
+<div id="rec-indicator">
+  <div id="rec-dot"></div>
+  <span id="rec-time">00:00</span>
+  <span id="rec-shots" style="color:#888;font-size:12px"></span>
+</div>
+
+<!-- Controls help -->
+<div id="help">
+  <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动</div>
+  <div><kbd>Space</kbd>/<kbd>Ctrl</kbd> 上升/下降</div>
+  <div><kbd>Shift</kbd> 减速 · <kbd>Tab</kbd> 加速</div>
+  <div>鼠标 环视 · 滚轮 推拉</div>
+  <div>左键 录制/停止 · 右键 暂停</div>
+  <div><kbd>P</kbd> 截图 · <kbd>Esc</kbd> 退出</div>
+</div>
+
+<!-- Frame guide overlay -->
+<div id="frame-guide"><div id="frame-rect"></div></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-item">
+    <span class="hud-label">速度</span>
+    <span class="hud-value" id="speed-value">1.0</span>
+    <span class="hud-label">x</span>
+    <div id="speed-bar-wrap"><div id="speed-bar-fill" style="width:20%"></div></div>
+  </div>
+  <div class="hud-sep"></div>
+  <div class="hud-item">
+    <span class="hud-label">FPS</span>
+    <span class="hud-value" id="fps-value">--</span>
+  </div>
+  <div class="hud-sep"></div>
+  <div class="hud-item">
+    <span class="hud-label">FOV</span>
+    <span class="hud-value" id="fov-value">55°</span>
+  </div>
+</div>
+
+<!-- Asset loading status -->
+<div id="load-status" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:16px;pointer-events:none;z-index:100">Loading...</div>
+
+<!-- Three.js import map -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module" src="/web/src/viewport.js"></script>
+</body>
+</html>

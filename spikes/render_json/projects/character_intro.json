@@ -1,0 +1,22 @@
+{
+  "template": "character_intro",
+  "asset": {
+    "type": "image",
+    "path": "input/hero.png"
+  },
+  "camera": {
+    "motion": "dolly_in"
+  },
+  "duration": 4,
+  "fps": 24,
+  "output": {
+    "width": 720,
+    "height": 1280,
+    "frames_dir": "output/character_intro/frames",
+    "video_path": "output/character_intro/final.mp4"
+  },
+  "text": {
+    "title": "New Hero Arrival",
+    "subtitle": "Limited Event"
+  }
+}

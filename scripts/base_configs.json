@@ -1,0 +1,101 @@
+[
+  {
+    "name": "gold_arabesque_dolly",
+    "asset_path": "E:/asset/AK/AK47_Gold_Arabesque_FN.glb",
+    "template": "product_orbit",
+    "camera": {
+      "motion": "dolly_in",
+      "speed": 1.0,
+      "start_distance": 7.2,
+      "end_distance": 5.8,
+      "height": 0.25,
+      "focal_length": 1.0
+    },
+    "output": {
+      "duration": 4,
+      "fps": 24,
+      "aspect_ratio": "16:9",
+      "resolution": "1080p"
+    },
+    "lighting_overrides": {
+      "key": {
+        "energy": 200,
+        "color": "#FFD700"
+      },
+      "rim_left": {
+        "energy": 180,
+        "color": "#FFAA44"
+      },
+      "rim_right": {
+        "energy": 120,
+        "color": "#FF6644"
+      }
+    }
+  },
+  {
+    "name": "hydroponic_orbit",
+    "asset_path": "E:/asset/AK/AK47_Hydroponic_FN.glb",
+    "template": "product_orbit",
+    "camera": {
+      "motion": "orbit",
+      "speed": 1.0,
+      "start_distance": 18.0,
+      "end_distance": 22.0,
+      "height": 0.55,
+      "focal_length": 1.0
+    },
+    "output": {
+      "duration": 4,
+      "fps": 24,
+      "aspect_ratio": "16:9",
+      "resolution": "1080p"
+    },
+    "lighting_overrides": {
+      "key": {
+        "energy": 180,
+        "color": "#CCFFCC"
+      },
+      "rim_left": {
+        "energy": 200,
+        "color": "#44FF88"
+      },
+      "rim_right": {
+        "energy": 140,
+        "color": "#4488FF"
+      }
+    }
+  },
+  {
+    "name": "vulcan_dolly",
+    "asset_path": "E:/asset/AK/AK47_Vulcan_FN.glb",
+    "template": "product_orbit",
+    "camera": {
+      "motion": "dolly_in",
+      "speed": 1.0,
+      "start_distance": 8.5,
+      "end_distance": 5.2,
+      "height": 0.35,
+      "focal_length": 1.0
+    },
+    "output": {
+      "duration": 4,
+      "fps": 24,
+      "aspect_ratio": "16:9",
+      "resolution": "1080p"
+    },
+    "lighting_overrides": {
+      "key": {
+        "energy": 220,
+        "color": "#E8EEFF"
+      },
+      "rim_left": {
+        "energy": 250,
+        "color": "#88CCFF"
+      },
+      "rim_right": {
+        "energy": 160,
+        "color": "#FF88CC"
+      }
+    }
+  }
+]

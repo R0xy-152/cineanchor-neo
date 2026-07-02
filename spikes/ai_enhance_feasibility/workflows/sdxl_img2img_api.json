@@ -1,0 +1,121 @@
+{
+  "1": {
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load no-text frame"
+    },
+    "inputs": {
+      "image": "__INPUT_IMAGE__"
+    }
+  },
+  "2": {
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load SDXL checkpoint"
+    },
+    "inputs": {
+      "ckpt_name": "__CHECKPOINT_NAME__"
+    }
+  },
+  "3": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Positive prompt"
+    },
+    "inputs": {
+      "clip": [
+        "2",
+        1
+      ],
+      "text": "__POSITIVE_PROMPT__"
+    }
+  },
+  "4": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Negative prompt"
+    },
+    "inputs": {
+      "clip": [
+        "2",
+        1
+      ],
+      "text": "__NEGATIVE_PROMPT__"
+    }
+  },
+  "5": {
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "Encode source image"
+    },
+    "inputs": {
+      "pixels": [
+        "1",
+        0
+      ],
+      "vae": [
+        "2",
+        2
+      ]
+    }
+  },
+  "6": {
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "Feasibility img2img"
+    },
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "3",
+        0
+      ],
+      "negative": [
+        "4",
+        0
+      ],
+      "latent_image": [
+        "5",
+        0
+      ],
+      "seed": "__SEED__",
+      "steps": "__STEPS__",
+      "cfg": "__CFG__",
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": "__DENOISE__"
+    }
+  },
+  "7": {
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "Decode enhanced image"
+    },
+    "inputs": {
+      "samples": [
+        "6",
+        0
+      ],
+      "vae": [
+        "2",
+        2
+      ]
+    }
+  },
+  "8": {
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save enhanced frame"
+    },
+    "inputs": {
+      "images": [
+        "7",
+        0
+      ],
+      "filename_prefix": "__OUTPUT_PREFIX__"
+    }
+  }
+}

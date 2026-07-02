@@ -1,0 +1,238 @@
+/* ── reset & base ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── shell ─────────────────────────────────────────────────────────── */
+.shell {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+
+/* ── header ─────────────────────────────────────────────────────────── */
+.header { text-align: center; margin-bottom: 36px; }
+.header h1 {
+  font-size: 2rem; font-weight: 700; letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #e6edf3 0%, #8ba9d0 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.subtitle { color: #6e7681; font-size: 0.9rem; margin-top: 4px; }
+
+/* ── sections ───────────────────────────────────────────────────────── */
+.section { margin-bottom: 28px; }
+.section-title { font-size: 0.85rem; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+.hint { font-weight: 400; text-transform: none; color: #58a6ff; }
+.vnext { font-style: normal; color: #6e7681; font-size: 0.75rem; margin-left: 6px; }
+
+/* ── template cards ─────────────────────────────────────────────────── */
+.template-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.template-card {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 16px; border: 2px solid #21262d; border-radius: 10px;
+  cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  background: #161b22;
+}
+.template-card:hover { border-color: #30363d; }
+.template-card.selected { border-color: #58a6ff; background: #1a2332; }
+.card-title { font-weight: 600; font-size: 0.95rem; }
+.card-desc { font-size: 0.8rem; color: #8b949e; }
+
+/* ── upload zone ────────────────────────────────────────────────────── */
+.upload-zone {
+  border: 2px dashed #30363d; border-radius: 10px;
+  padding: 32px 20px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: #161b22; position: relative;
+}
+.upload-zone:hover, .upload-zone.dragover { border-color: #58a6ff; background: #1a2332; }
+.upload-prompt { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #8b949e; }
+.upload-icon { font-size: 2rem; color: #30363d; }
+.upload-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+.file-icon { font-size: 1.2rem; }
+.file-name { font-weight: 600; color: #e6edf3; }
+.file-type {
+  font-size: 0.75rem; padding: 2px 8px; border-radius: 4px;
+  background: #1a3a5c; color: #58a6ff; font-weight: 600;
+}
+.file-clear {
+  margin-left: auto; background: none; border: none; color: #8b949e;
+  cursor: pointer; font-size: 1.1rem; padding: 4px 8px;
+}
+.file-clear:hover { color: #f85149; }
+
+/* ── params ─────────────────────────────────────────────────────────── */
+.param-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.param-field { display: flex; flex-direction: column; gap: 5px; font-size: 0.85rem; color: #8b949e; }
+.param-field input, .param-field select {
+  padding: 10px 12px; border: 1px solid #30363d; border-radius: 8px;
+  background: #0d1117; color: #e6edf3; font-size: 0.9rem;
+  font-family: inherit; outline: none; transition: border-color 0.2s;
+}
+.param-field input:focus, .param-field select:focus { border-color: #58a6ff; }
+.param-field input:disabled, .param-field select:disabled { opacity: 0.4; cursor: not-allowed; }
+.disabled-field { opacity: 0.55; }
+
+/* ── render mode toggle ─────────────────────────────────────────────── */
+.mode-toggle { display: flex; gap: 0; border-radius: 10px; overflow: hidden; border: 1px solid #30363d; }
+.mode-btn {
+  flex: 1; padding: 12px 16px; border: none; background: #161b22;
+  color: #8b949e; cursor: pointer; font-size: 0.9rem; font-family: inherit;
+  transition: background 0.2s, color 0.2s;
+}
+.mode-btn.active { background: #1a3a5c; color: #58a6ff; font-weight: 600; }
+.mode-btn:not(.active):hover { background: #1c2333; }
+.mode-hint { font-weight: 400; font-size: 0.78rem; opacity: 0.7; display: block; }
+
+/* ── generate button ────────────────────────────────────────────────── */
+.generate-btn {
+  width: 100%; padding: 16px; border: none; border-radius: 10px;
+  background: linear-gradient(135deg, #58a6ff 0%, #3d8bfd 100%);
+  color: #fff; font-size: 1.05rem; font-weight: 700; cursor: pointer;
+  font-family: inherit; transition: opacity 0.2s, transform 0.1s;
+}
+.generate-btn:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
+.generate-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── progress ───────────────────────────────────────────────────────── */
+.progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.status-badge {
+  font-size: 0.85rem; font-weight: 600; padding: 4px 12px; border-radius: 6px;
+  background: #21262d; color: #8b949e;
+}
+.status-badge.status-rendering, .status-badge.status-compositing, .status-badge.status-enhancing { background: #1a3a5c; color: #58a6ff; }
+.status-badge.status-done { background: #1a3d2a; color: #3fb950; }
+.status-badge.status-failed { background: #3d1a1a; color: #f85149; }
+.elapsed { font-size: 0.82rem; color: #6e7681; font-variant-numeric: tabular-nums; }
+
+.progress-bar {
+  height: 8px; background: #21262d; border-radius: 4px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, #58a6ff, #3d8bfd);
+  border-radius: 4px; transition: width 0.6s ease;
+}
+
+.progress-msg { font-size: 0.82rem; color: #8b949e; margin-top: 6px; }
+
+/* ── warning & error ────────────────────────────────────────────────── */
+.warning-banner, .error-banner, .error-msg {
+  padding: 12px 16px; border-radius: 8px; font-size: 0.85rem; margin-top: 8px;
+}
+.warning-banner { background: #2a1f0a; color: #e3b341; border: 1px solid #5c4a1f; }
+.error-banner, .error-msg { background: #2a0f0f; color: #f85149; border: 1px solid #5c1f1f; }
+
+/* ── download ───────────────────────────────────────────────────────── */
+.download-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 16px; border-radius: 10px;
+  background: linear-gradient(135deg, #3fb950 0%, #2ea043 100%);
+  color: #fff; font-size: 1.05rem; font-weight: 700; text-decoration: none;
+  transition: opacity 0.2s, transform 0.1s; font-family: inherit;
+}
+.download-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+
+/* ── utility ────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ── camera control ─────────────────────────────────────────────────── */
+.camera-control {
+  background: #161b22; border: 1px solid #21262d; border-radius: 10px;
+  padding: 16px;
+}
+.cam-speed-display {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.speed-label { font-size: 0.82rem; color: #8b949e; font-weight: 600; min-width: 36px; }
+.speed-value {
+  font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: #58a6ff; min-width: 52px; text-align: right;
+  font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+}
+.speed-bar-track {
+  flex: 1; height: 6px; background: #21262d; border-radius: 3px; overflow: hidden;
+}
+.speed-bar-fill {
+  height: 100%; background: linear-gradient(90deg, #58a6ff, #3d8bfd);
+  border-radius: 3px; transition: width 0.05s linear;
+}
+.cam-key-hints {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 0.78rem; color: #6e7681;
+}
+.cam-key-hints kbd {
+  display: inline-block; padding: 2px 7px; border-radius: 4px;
+  background: #21262d; color: #e6edf3; border: 1px solid #30363d;
+  font-family: inherit; font-size: 0.75rem; font-weight: 600;
+}
+.hint-arrow { color: #8b949e; }
+.hint-note { color: #58a6ff; opacity: 0.7; margin-left: auto; }
+
+/* ── speed HUD overlay ──────────────────────────────────────────────── */
+.hud-overlay {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  background: rgba(13, 17, 23, 0.88); backdrop-filter: blur(4px);
+  border: 1px solid rgba(48, 54, 61, 0.7); border-radius: 10px;
+  padding: 10px 14px; pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.hud-body {
+  display: flex; align-items: center; gap: 8px;
+}
+.hud-label {
+  font-size: 0.7rem; font-weight: 700; color: #6e7681;
+  letter-spacing: 0.1em; padding: 2px 6px; border-radius: 3px;
+  background: #21262d;
+}
+.hud-speed {
+  font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: #58a6ff; min-width: 42px; text-align: right;
+  font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+}
+.hud-bar-track {
+  width: 50px; height: 4px; background: #21262d; border-radius: 2px; overflow: hidden;
+}
+.hud-bar-fill {
+  height: 100%; background: linear-gradient(90deg, #58a6ff, #3d8bfd);
+  border-radius: 2px; transition: width 0.04s linear;
+}
+.hud-unit { font-size: 0.72rem; color: #6e7681; font-weight: 600; }
+
+/* ── Interactive camera (loop 08) ────────────────────────────────── */
+.loop-badge {
+  display: inline-block; font-size: 0.68rem; font-weight: 700;
+  background: linear-gradient(135deg, #55EEFF, #FF59A6); color: #0a0a0f;
+  padding: 1px 6px; border-radius: 4px; vertical-align: middle;
+  margin-left: 6px;
+}
+.interactive-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.interactive-btn {
+  padding: 9px 20px; border: 1px solid rgba(85,238,255,0.4);
+  border-radius: 8px; background: rgba(85,238,255,0.08);
+  color: #55EEFF; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.interactive-btn:hover { background: rgba(85,238,255,0.16); border-color: rgba(85,238,255,0.7); }
+.interactive-status { font-size: 0.82rem; color: #888; }
+.interactive-clear {
+  padding: 4px 12px; border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px; background: transparent; color: #aaa;
+  font-size: 0.78rem; cursor: pointer;
+}
+.interactive-clear:hover { border-color: rgba(255,100,100,0.4); color: #ff6666; }
+
+@media (max-width: 720px) {
+  .template-cards { grid-template-columns: 1fr; }
+  .param-grid { grid-template-columns: 1fr; }
+  .mode-toggle { flex-direction: column; }
+  .shell { padding: 20px 14px 48px; }
+  .header h1 { font-size: 1.6rem; }
+}

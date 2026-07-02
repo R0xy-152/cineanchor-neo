@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CineAnchor — 本地渲染</title>
+    <link rel="stylesheet" href="/web/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <!-- Header -->
+      <header class="header">
+        <h1>CineAnchor</h1>
+        <p class="subtitle">本地渲染 · 游戏宣传短片</p>
+      </header>
+
+      <!-- Template selector -->
+      <section class="section">
+        <h2 class="section-title">选择模板</h2>
+        <div class="template-cards" id="templateCards">
+          <label class="template-card selected" data-template="character_intro">
+            <span class="card-title">角色登场</span>
+            <span class="card-desc">透明 PNG 角色 · 推镜入场</span>
+          </label>
+          <label class="template-card" data-template="product_orbit">
+            <span class="card-title">产品展示</span>
+            <span class="card-desc">GLB 模型 · 环绕展示</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Upload zone -->
+      <section class="section">
+        <h2 class="section-title">上传素材 <span class="hint" id="assetHint">PNG 图片</span></h2>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fileInput" accept=".png,.glb" hidden />
+          <div class="upload-prompt" id="uploadPrompt">
+            <span class="upload-icon">+</span>
+            <span>拖拽文件或点击选择</span>
+          </div>
+          <div class="upload-info hidden" id="uploadInfo">
+            <span class="file-icon">📄</span>
+            <span class="file-name" id="fileName"></span>
+            <span class="file-type" id="fileType"></span>
+            <button type="button" class="file-clear" id="fileClear">✕</button>
+          </div>
+        </div>
+        <p class="error-msg hidden" id="uploadError"></p>
+      </section>
+
+      <!-- Parameters -->
+      <section class="section">
+        <h2 class="section-title">参数设置</h2>
+        <div class="param-grid">
+          <label class="param-field">
+            <span>标题</span>
+            <input type="text" id="titleInput" value="New Hero Arrival" maxlength="80" />
+          </label>
+          <label class="param-field">
+            <span>副标题</span>
+            <input type="text" id="subtitleInput" value="Limited Event" maxlength="120" />
+          </label>
+          <label class="param-field">
+            <span>画面比例</span>
+            <select id="aspectRatio">
+              <option value="9:16" selected>9:16 竖屏</option>
+              <option value="16:9">16:9 横屏</option>
+            </select>
+          </label>
+          <label class="param-field disabled-field">
+            <span>主体缩放 <em class="vnext">V0.2</em></span>
+            <input type="range" id="subjectScale" min="0.8" max="1.2" step="0.05" value="1.0" disabled />
+          </label>
+        </div>
+      </section>
+
+      <!-- Camera control -->
+      <section class="section" id="cameraControlSection">
+        <h2 class="section-title">
+          镜头控制
+          <span class="hint">键盘实时操控</span>
+        </h2>
+        <div class="camera-control">
+          <div class="cam-speed-display">
+            <span class="speed-label">速度</span>
+            <span class="speed-value" id="speedValue">1.00</span>
+            <div class="speed-bar-track">
+              <div class="speed-bar-fill" id="speedBarFill" style="width: 20%"></div>
+            </div>
+          </div>
+          <div class="cam-key-hints">
+            <kbd>Shift</kbd> <span class="hint-arrow">减速</span>
+            <kbd>Tab</kbd> / <kbd>Alt</kbd> <span class="hint-arrow">加速</span>
+            <span class="hint-note">松手保持速度 · 生成时锁定</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Interactive camera (loop 08) -->
+      <section class="section">
+        <h2 class="section-title">交互预览 <span class="loop-badge">NEW</span></h2>
+        <div class="interactive-row">
+          <button class="interactive-btn" id="interactiveBtn" type="button">打开 3D 预览</button>
+          <span class="interactive-status" id="interactiveStatus">未录制</span>
+          <button class="interactive-clear hidden" id="interactiveClear" type="button">清除</button>
+        </div>
+        <p class="param-hint">在 3D 窗口中操作相机并录制运镜，完成后数据自动回传。</p>
+      </section>
+
+      <!-- Render mode -->
+      <section class="section">
+        <h2 class="section-title">渲染模式</h2>
+        <div class="mode-toggle" id="modeToggle">
+          <button type="button" class="mode-btn active" data-mode="fast">快速版</button>
+          <button type="button" class="mode-btn" data-mode="premium">精品版 <span class="mode-hint">轻度后期处理</span></button>
+        </div>
+      </section>
+
+      <!-- Generate -->
+      <section class="section">
+        <button class="generate-btn" id="generateBtn" disabled>请先上传素材</button>
+      </section>
+
+      <!-- Progress -->
+      <section class="section hidden" id="progressSection">
+        <div class="progress-header">
+          <span class="status-badge" id="statusBadge">等待中</span>
+          <span class="elapsed" id="elapsed"></span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+        <p class="progress-msg" id="progressMsg"></p>
+      </section>
+
+      <!-- Warning -->
+      <div class="warning-banner hidden" id="warningBanner">
+        精品版处理失败，已返回标准版视频。
+      </div>
+
+      <!-- Download -->
+      <section class="section hidden" id="downloadSection">
+        <a class="download-btn" id="downloadLink" href="#">下载 MP4</a>
+      </section>
+
+      <!-- Error -->
+      <div class="error-banner hidden" id="errorBanner"></div>
+    </main>
+
+    <!-- Speed HUD overlay -->
+    <div class="hud-overlay hidden" id="hudOverlay">
+      <div class="hud-body">
+        <span class="hud-label">CAM</span>
+        <span class="hud-speed" id="hudSpeed">1.00</span>
+        <div class="hud-bar-track">
+          <div class="hud-bar-fill" id="hudBarFill" style="width: 20%"></div>
+        </div>
+        <span class="hud-unit">×</span>
+      </div>
+    </div>
+
+    <script src="/web/app.js"></script>
+  </body>
+</html>
