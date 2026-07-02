@@ -196,11 +196,13 @@ See `docs/spike_results.md` for detailed spike data and `docs/portfolio_v0_1_rev
 → 启明验收签收 → ADR (Andy-only) → 更新文档（见下方 §文档更新策略）→ push → /clear
 ```
 
+> **Andy 在 [`Andy` 分支](https://github.com/R0xy-152/cineanchor-neo/tree/Andy) 上发布需求、Requirements、Plans、ADR。** CC 从该分支读取上游文档，在自己的 `feature/*` 分支上执行。
+
 | Role | Who | Responsibilities |
 |------|-----|-----------------|
-| 产品/架构 | Andy | 收敛需求，产出 Requirements + Plans + 验收策略，plan-review gate，ADR |
+| 产品/架构 | Andy | 在 [`Andy` 分支](https://github.com/R0xy-152/cineanchor-neo/tree/Andy) 发布需求、Requirements、Plans、ADR，plan-review gate |
 | 审批/验收 | 启明 | Requirements 审批，最终验收签收 |
-| 执行 | CC (Claude Code) | 细化 plan，TDD，实现，测试/git/视觉/parity 四道闸门 |
+| 执行 | CC (Claude Code) | 从 Andy 分支读取上游文档，在 `feature/*` 分支上执行：细化 plan，TDD，实现，四道闸门 |
 
 ### 文档更新策略
 
