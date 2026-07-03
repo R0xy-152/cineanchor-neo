@@ -1,0 +1,1135 @@
+下面是一套**具体可执行计划**，目标是把参考视频拆成可复用的“模板语法”，再落到 CineAnchor 的 `weapon_skin_showcase`、`character_birthday` 等模板里。
+
+核心原则：
+
+> **不训练视频生成模型。先把参考视频结构化，提取成模板语法，再用 Blender / FFmpeg / Three.js 确定性生成。**
+
+CineAnchor 当前已有 Web → FastAPI → Project JSON → Blender Eevee → FFmpeg → MP4 的基础链路，适合走“模板语法 + 确定性渲染”的路线，而不是直接训练黑箱视频模型。
+
+---
+
+# 一、最终目标
+
+建立一个完整流程：
+
+```text
+参考视频
+  ↓
+自动抽帧 / 分析基础信息
+  ↓
+人工或半自动标注
+  ↓
+拆成模板语法
+  ↓
+生成 template grammar JSON
+  ↓
+映射到 CineAnchor Project JSON
+  ↓
+Blender / FFmpeg 渲染
+  ↓
+视觉验收
+```
+
+最终你要得到的不是“参考视频文件库”，而是：
+
+```text
+模板语法库
+时间轴库
+转场库
+字体样式库
+颜色主题库
+粒子预设库
+镜头参数库
+视觉验收规则库
+```
+
+---
+
+# 二、目录结构设计
+
+建议新增：
+
+```text
+reference_library/
+  weapon_skin_showcase/
+    video_001/
+      source_notes.md
+      metadata.json
+      contact_sheet.jpg
+      timeline.json
+      style_profile.json
+      template_grammar.json
+      visual_gate_notes.md
+
+    video_002/
+      ...
+
+  character_birthday/
+    video_001/
+      ...
+
+docs/
+  reference_analysis/
+    reference_video_analysis_method.md
+    weapon_skin_showcase_findings.md
+    character_birthday_findings.md
+
+  templates/
+    template_grammar_spec.md
+    weapon_skin_showcase_template.md
+    character_birthday_template.md
+
+tools/
+  analyze_reference_videos.py
+  build_template_grammar.py
+  validate_generated_video.py
+```
+
+第一阶段重点是 `reference_library/` 和 `docs/templates/template_grammar_spec.md`。
+
+---
+
+# 三、第一阶段：参考视频自动分析工具
+
+## 目标
+
+写一个工具，把视频先转成可分析材料。
+
+建议文件：
+
+```text
+tools/analyze_reference_videos.py
+```
+
+## 输入
+
+```bash
+python tools/analyze_reference_videos.py \
+  --input references/weapon_001.mp4 \
+  --template-family weapon_skin_showcase \
+  --output reference_library/weapon_skin_showcase/video_001
+```
+
+## 输出
+
+```text
+reference_library/weapon_skin_showcase/video_001/
+  metadata.json
+  contact_sheet.jpg
+  frames/
+    t_0000.jpg
+    t_0100.jpg
+    t_0200.jpg
+  scene_changes.json
+  color_profile.json
+  motion_profile.json
+  audio_profile.json
+```
+
+## 自动分析内容
+
+| 分析项           | 方法                           | 用途                   |
+| ------------- | ---------------------------- | -------------------- |
+| 时长            | ffprobe                      | 判断模板长度               |
+| 分辨率           | ffprobe                      | 判断画幅                 |
+| 帧率            | ffprobe                      | 判断输出标准               |
+| contact sheet | ffmpeg 1fps 抽帧               | 快速看结构                |
+| 场景变化          | OpenCV / ffmpeg scene detect | 初步拆时间段               |
+| 主色            | OpenCV k-means / histogram   | 提取主题色                |
+| 亮度变化          | 灰度均值                         | 判断 light pulse       |
+| 运动强度          | optical flow / frame diff    | 判断是否有镜头运动            |
+| 音频峰值          | RMS / onset                  | 判断卡点                 |
+| 安全区污染         | 手动标注                         | 去掉 Reels / TikTok UI |
+
+第一版不要依赖 OCR。
+文字内容先人工标注，因为游戏宣传片里的字体、Logo、UI 容易误识别。
+
+---
+
+# 四、第二阶段：人工标注规范
+
+自动分析只能给基础数据，真正有价值的是人工标注。
+
+每条视频都要填一个：
+
+```text
+timeline.json
+```
+
+## timeline.json 示例
+
+以枪械皮肤宣传片为例：
+
+```json
+{
+  "template_family": "weapon_skin_showcase",
+  "video_id": "weapon_001",
+  "duration": 12.1,
+  "aspect_ratio": "9:16",
+  "platform_pollution": [
+    "top_status_bar",
+    "right_side_reels_buttons",
+    "bottom_account_text"
+  ],
+  "stages": [
+    {
+      "id": "shadow_reveal",
+      "start": 0.0,
+      "end": 1.2,
+      "description": "黑场中出现枪械轮廓，火星和暗红边缘光开始出现",
+      "observed_elements": [
+        "dark_background",
+        "weapon_silhouette",
+        "rim_light",
+        "low_density_particles"
+      ],
+      "camera": "static_or_slow_dolly",
+      "transition_in": "fade_from_black",
+      "transition_out": "light_pulse"
+    },
+    {
+      "id": "light_sweep",
+      "start": 1.2,
+      "end": 3.5,
+      "description": "主题色光扫过枪身，揭示皮肤纹理",
+      "observed_elements": [
+        "weapon_detail",
+        "orange_light_sweep",
+        "metal_reflection"
+      ],
+      "camera": "slow_dolly_in",
+      "transition_in": "hard_cut_or_continuous",
+      "transition_out": "pulse"
+    },
+    {
+      "id": "hero_showcase",
+      "start": 3.5,
+      "end": 7.0,
+      "description": "完整武器侧面展示，主体占画面主要区域",
+      "observed_elements": [
+        "full_weapon_profile",
+        "dark_stage",
+        "rim_light",
+        "subtle_particles"
+      ],
+      "camera": "orbit_or_side_profile_dolly",
+      "transition_in": "continuous",
+      "transition_out": "element_burst"
+    },
+    {
+      "id": "element_burst",
+      "start": 7.0,
+      "end": 9.2,
+      "description": "火元素增强，火星、灰烬、橙红 bloom 增强",
+      "observed_elements": [
+        "ember_sparks",
+        "ash_particles",
+        "strong_orange_bloom"
+      ],
+      "camera": "slight_orbit",
+      "transition_in": "particle_rise",
+      "transition_out": "title_reveal"
+    },
+    {
+      "id": "title_card",
+      "start": 9.2,
+      "end": 10.8,
+      "description": "武器名、皮肤名、稀有度、系列信息出现",
+      "observed_elements": [
+        "weapon_name_text",
+        "skin_name_text",
+        "rarity_badge",
+        "series_label"
+      ],
+      "camera": "hold",
+      "transition_in": "text_slide_in",
+      "transition_out": "cta_cut"
+    },
+    {
+      "id": "cta_end",
+      "start": 10.8,
+      "end": 12.0,
+      "description": "Available Now 和 Logo 片尾",
+      "observed_elements": [
+        "cta_text",
+        "logo",
+        "final_glow"
+      ],
+      "camera": "hold",
+      "transition_in": "fade_or_flash",
+      "transition_out": "fade_to_black"
+    }
+  ]
+}
+```
+
+---
+
+# 五、第三阶段：模板语法定义
+
+你要把参考视频拆成一套标准语法。
+
+## 1. 模板语法的核心对象
+
+```text
+TemplateGrammar
+  ├── Metadata
+  ├── Inputs
+  ├── Timeline
+  ├── Stages
+  ├── Layers
+  ├── Transitions
+  ├── TextStyles
+  ├── ColorPalette
+  ├── ParticlePresets
+  ├── CameraPresets
+  ├── AudioCues
+  └── ValidationRules
+```
+
+---
+
+## 2. TemplateGrammar JSON 示例
+
+```json
+{
+  "template_family": "weapon_skin_showcase",
+  "version": "0.1",
+  "goal": "通过输入武器 PNG / GLB、皮肤名、主题色、元素类型，生成一条 12 秒竖屏武器皮肤宣传片",
+  "input_slots": {
+    "weapon_asset": {
+      "type": ["png", "glb"],
+      "required": true
+    },
+    "logo": {
+      "type": ["png"],
+      "required": false
+    },
+    "weapon_name": {
+      "type": "text",
+      "required": true
+    },
+    "skin_name": {
+      "type": "text",
+      "required": true
+    },
+    "rarity": {
+      "type": "text",
+      "required": false
+    },
+    "series": {
+      "type": "text",
+      "required": false
+    },
+    "cta": {
+      "type": "text",
+      "default": "Available Now"
+    },
+    "theme_color": {
+      "type": "color",
+      "default": "#FF4422"
+    },
+    "element": {
+      "type": "enum",
+      "values": ["fire", "ice", "electric", "toxic", "gold", "cyber", "sakura"]
+    }
+  },
+  "output": {
+    "duration": 12,
+    "resolution": [1080, 1920],
+    "aspect_ratio": "9:16",
+    "format": "mp4"
+  },
+  "timeline": [
+    {
+      "stage": "shadow_reveal",
+      "start": 0.0,
+      "end": 1.2
+    },
+    {
+      "stage": "light_sweep",
+      "start": 1.2,
+      "end": 3.5
+    },
+    {
+      "stage": "hero_showcase",
+      "start": 3.5,
+      "end": 7.0
+    },
+    {
+      "stage": "element_burst",
+      "start": 7.0,
+      "end": 9.2
+    },
+    {
+      "stage": "title_card",
+      "start": 9.2,
+      "end": 10.8
+    },
+    {
+      "stage": "cta_end",
+      "start": 10.8,
+      "end": 12.0
+    }
+  ]
+}
+```
+
+---
+
+# 六、第四阶段：把每类信息拆成库
+
+## 1. 时间轴库
+
+文件：
+
+```text
+docs/templates/timeline_patterns.md
+```
+
+先定义 3 套时间轴。
+
+### A. 12 秒枪械皮肤展示
+
+```json
+{
+  "id": "weapon_12s_standard",
+  "duration": 12,
+  "stages": [
+    ["shadow_reveal", 0.0, 1.2],
+    ["light_sweep", 1.2, 3.5],
+    ["hero_showcase", 3.5, 7.0],
+    ["element_burst", 7.0, 9.2],
+    ["title_card", 9.2, 10.8],
+    ["cta_end", 10.8, 12.0]
+  ]
+}
+```
+
+### B. 15 秒枪械皮肤展示
+
+```json
+{
+  "id": "weapon_15s_detail",
+  "duration": 15,
+  "stages": [
+    ["shadow_reveal", 0.0, 1.5],
+    ["muzzle_detail", 1.5, 3.5],
+    ["body_detail", 3.5, 5.5],
+    ["hero_showcase", 5.5, 9.0],
+    ["element_burst", 9.0, 11.5],
+    ["title_card", 11.5, 13.0],
+    ["cta_end", 13.0, 15.0]
+  ]
+}
+```
+
+### C. 27 秒角色生日模板
+
+```json
+{
+  "id": "character_birthday_27s",
+  "duration": 27,
+  "stages": [
+    ["date_opening", 0.0, 2.2],
+    ["name_card", 2.2, 3.2],
+    ["birthday_title_closeup", 3.2, 7.5],
+    ["character_poster", 7.5, 12.0],
+    ["character_interaction", 12.0, 23.5],
+    ["brand_end_card", 23.5, 27.0]
+  ]
+}
+```
+
+---
+
+## 2. 转场库
+
+文件：
+
+```text
+docs/templates/transition_presets.md
+```
+
+第一版只做这些：
+
+| 转场 ID          | 用途      | 实现方式                                 |
+| -------------- | ------- | ------------------------------------ |
+| hard_cut       | 快速切换    | FFmpeg / Blender frame cut           |
+| fade_black     | 开场 / 结束 | alpha fade                           |
+| fade_white     | 亮场切换    | white overlay fade                   |
+| blur_zoom      | 进入主视觉   | scale + gaussian blur                |
+| light_flash    | 光效卡点    | additive color overlay               |
+| smoke_wipe     | 进入片尾    | alpha smoke video / procedural noise |
+| particle_cover | 粒子遮挡转场  | particle layer over scene            |
+| text_slide_in  | 标题进入    | 2D overlay keyframe                  |
+
+### transition_presets.json
+
+```json
+{
+  "blur_zoom": {
+    "duration": 0.4,
+    "params": {
+      "blur_start": 12,
+      "blur_end": 0,
+      "scale_start": 1.08,
+      "scale_end": 1.0
+    }
+  },
+  "light_flash": {
+    "duration": 0.18,
+    "params": {
+      "color": "$theme_color",
+      "opacity_peak": 0.65,
+      "blend_mode": "additive"
+    }
+  },
+  "smoke_wipe": {
+    "duration": 0.8,
+    "params": {
+      "color": "#FFFFFF",
+      "density": 0.55,
+      "direction": "bottom_to_top"
+    }
+  }
+}
+```
+
+---
+
+## 3. 字体库
+
+文件：
+
+```text
+docs/templates/text_style_presets.md
+```
+
+先定义 5 类文字。
+
+| 样式 ID                 | 用途            | 说明              |
+| --------------------- | ------------- | --------------- |
+| weapon_title_tech     | 武器皮肤标题        | 粗体、科技感、字距较大     |
+| rarity_badge          | 稀有度标签         | 小胶囊 / 小铭牌       |
+| cta_clean             | Available Now | 简洁、居中、安全区       |
+| subtitle_white_stroke | 对白字幕          | 白字黑描边           |
+| birthday_serif        | 角色生日标题        | serif / 手写 / 优雅 |
+
+### text_style_presets.json
+
+```json
+{
+  "weapon_title_tech": {
+    "font_family": "default_bold",
+    "font_size": 92,
+    "color": "#FFFFFF",
+    "stroke_color": "#000000",
+    "stroke_width": 3,
+    "letter_spacing": 4,
+    "safe_area": {
+      "left": 80,
+      "right": 80,
+      "top": 120,
+      "bottom": 180
+    }
+  },
+  "rarity_badge": {
+    "font_family": "default_bold",
+    "font_size": 34,
+    "color": "#FFFFFF",
+    "background_color": "$theme_color",
+    "padding": [16, 8],
+    "corner_radius": 8
+  },
+  "cta_clean": {
+    "font_family": "default_bold",
+    "font_size": 54,
+    "color": "#FFFFFF",
+    "stroke_color": "#000000",
+    "stroke_width": 2,
+    "position": "bottom_center"
+  }
+}
+```
+
+注意：第一版不要把关键文字放到 3D 地面里，必须用 2D overlay 保证可读性。
+
+---
+
+## 4. 颜色主题库
+
+文件：
+
+```text
+docs/templates/color_theme_presets.md
+```
+
+### color_theme_presets.json
+
+```json
+{
+  "fire": {
+    "primary": "#FF4422",
+    "secondary": "#FFAA33",
+    "background": "#080404",
+    "rim_light": "#FF4422",
+    "particle": "#FFAA33",
+    "bloom": 0.75
+  },
+  "ice": {
+    "primary": "#48C8FF",
+    "secondary": "#D8F5FF",
+    "background": "#030B12",
+    "rim_light": "#48C8FF",
+    "particle": "#BEEFFF",
+    "bloom": 0.55
+  },
+  "electric": {
+    "primary": "#22F0FF",
+    "secondary": "#8A5CFF",
+    "background": "#030414",
+    "rim_light": "#22F0FF",
+    "particle": "#FFFFFF",
+    "bloom": 0.85
+  },
+  "toxic": {
+    "primary": "#73FF2F",
+    "secondary": "#C6FF3A",
+    "background": "#031006",
+    "rim_light": "#73FF2F",
+    "particle": "#A6FF5C",
+    "bloom": 0.65
+  },
+  "gold": {
+    "primary": "#FFD36A",
+    "secondary": "#FFF0B8",
+    "background": "#080604",
+    "rim_light": "#FFD36A",
+    "particle": "#FFE9A6",
+    "bloom": 0.6
+  },
+  "cyber": {
+    "primary": "#8D35FF",
+    "secondary": "#1CA8FF",
+    "background": "#04030B",
+    "rim_light": "#8D35FF",
+    "particle": "#1CA8FF",
+    "bloom": 0.8
+  }
+}
+```
+
+---
+
+## 5. 粒子库
+
+文件：
+
+```text
+docs/templates/particle_presets.md
+```
+
+### particle_presets.json
+
+```json
+{
+  "ember_sparks": {
+    "element": "fire",
+    "count": 80,
+    "layers": ["background", "foreground"],
+    "direction": "bottom_left_to_top_right",
+    "speed": [0.6, 1.8],
+    "size": [2, 8],
+    "color": ["#FFAA33", "#FF4422", "#FFD18A"],
+    "motion_blur": true,
+    "opacity": [0.35, 0.9],
+    "lifetime": [0.6, 1.8]
+  },
+  "ash_particles": {
+    "element": "fire",
+    "count": 40,
+    "direction": "slow_up",
+    "size": [1, 4],
+    "color": ["#666666", "#AA6644"],
+    "opacity": [0.15, 0.45]
+  },
+  "frost_particles": {
+    "element": "ice",
+    "count": 70,
+    "direction": "slow_drift",
+    "size": [2, 6],
+    "color": ["#D8F5FF", "#48C8FF"],
+    "opacity": [0.25, 0.75]
+  },
+  "electric_arcs": {
+    "element": "electric",
+    "count": 12,
+    "direction": "weapon_edge_random",
+    "color": ["#22F0FF", "#FFFFFF"],
+    "lifetime": [0.08, 0.2],
+    "flicker": true
+  }
+}
+```
+
+第一版可以只实现 `ember_sparks`，其他先写配置，不必全部渲染。
+
+---
+
+## 6. 镜头参数库
+
+文件：
+
+```text
+docs/templates/camera_presets.md
+```
+
+### camera_presets.json
+
+```json
+{
+  "side_profile_dolly_in": {
+    "description": "适合 PNG 或当前 orbit 不稳定时使用",
+    "start_distance": 7.2,
+    "end_distance": 5.8,
+    "start_angle_deg": 0,
+    "end_angle_deg": 0,
+    "height": 1.2,
+    "focal_length": 70,
+    "target": [0, 0, 0]
+  },
+  "small_angle_orbit": {
+    "description": "GLB 武器展示首选，有明显但不过度的角度变化",
+    "start_distance": 7.2,
+    "end_distance": 5.8,
+    "start_angle_deg": -25,
+    "end_angle_deg": 25,
+    "height": 1.2,
+    "focal_length": 70,
+    "target": [0, 0, 0]
+  },
+  "detail_sweep_muzzle_to_stock": {
+    "description": "枪口到枪托细节扫过",
+    "start_distance": 4.2,
+    "end_distance": 4.0,
+    "start_target": [-1.8, 0, 0],
+    "end_target": [1.8, 0, 0],
+    "height": 1.1,
+    "focal_length": 85
+  }
+}
+```
+
+关键规则：
+
+> 如果实际没有角度变化，就不能叫 orbit。
+> 真 orbit 至少要有 `start_angle_deg` 和 `end_angle_deg` 的可见差异。
+
+---
+
+# 七、第五阶段：把语法映射到 CineAnchor Project JSON
+
+你最终要生成的是 CineAnchor 能吃的 Project JSON。
+
+例如：
+
+```json
+{
+  "template": "weapon_skin_showcase",
+  "aspect_ratio": "9:16",
+  "duration": 12,
+  "resolution": {
+    "width": 1080,
+    "height": 1920
+  },
+  "assets": {
+    "weapon": "AK47_Vulcan_FN.glb",
+    "logo": null,
+    "bgm": null
+  },
+  "texts": {
+    "weapon_name": "AK-47",
+    "skin_name": "VULCAN",
+    "rarity": "Legendary",
+    "series": "Factory New",
+    "cta": "Available Now"
+  },
+  "style": {
+    "element": "fire",
+    "theme_color": "#FF4422",
+    "color_preset": "fire",
+    "particle_preset": "ember_sparks",
+    "font_preset": "weapon_title_tech"
+  },
+  "camera": {
+    "preset": "small_angle_orbit",
+    "start_distance": 7.2,
+    "end_distance": 5.8,
+    "start_angle_deg": -25,
+    "end_angle_deg": 25,
+    "height": 1.2,
+    "focal_length": 70
+  },
+  "timeline": {
+    "shadow_reveal": {
+      "start": 0.0,
+      "end": 1.2
+    },
+    "light_sweep": {
+      "start": 1.2,
+      "end": 3.5
+    },
+    "hero_showcase": {
+      "start": 3.5,
+      "end": 7.0
+    },
+    "element_burst": {
+      "start": 7.0,
+      "end": 9.2
+    },
+    "title_card": {
+      "start": 9.2,
+      "end": 10.8
+    },
+    "cta_end": {
+      "start": 10.8,
+      "end": 12.0
+    }
+  },
+  "validation": {
+    "weapon_width_ratio_min": 0.75,
+    "weapon_width_ratio_max": 0.9,
+    "text_safe_area": {
+      "left": 80,
+      "right": 80,
+      "top": 120,
+      "bottom": 180
+    },
+    "theme_color_visibility_min": 0.08,
+    "particle_required": true,
+    "cta_required": true
+  }
+}
+```
+
+---
+
+# 八、第六阶段：视觉验收规则
+
+你现在最大的问题不是生成不出来，而是：
+
+> 输出规格对了，但效果不像宣传片。
+
+所以必须做 `validate_generated_video.py`。
+
+建议文件：
+
+```text
+tools/validate_generated_video.py
+```
+
+## 验收项
+
+| 验收项        | 规则                                           |
+| ---------- | -------------------------------------------- |
+| 时长         | 11.8s–12.2s                                  |
+| 分辨率        | 1080×1920                                    |
+| 枪械主体大小     | hero shot 阶段占画面宽度 75%–90%                    |
+| 主题色可见      | #FF4422 或相近橙红色在关键帧中有明显覆盖                     |
+| 火元素出现      | 有 ember / spark / ash 粒子层                    |
+| 文字安全区      | 文字不贴边、不被裁切                                   |
+| CTA        | 最后 2 秒出现 Available Now                       |
+| 标题信息       | AK-47 / VULCAN / Legendary / Factory New 都出现 |
+| camera 一致性 | 如果 preset=orbit，角度必须变化                       |
+| 黑场比例       | 不允许 70% 以上画面长期纯黑                             |
+| 阶段变化       | 每个时间段至少有一种视觉状态变化                             |
+
+## 输出示例
+
+```json
+{
+  "video": "final.mp4",
+  "template": "weapon_skin_showcase",
+  "score": 58,
+  "pass": false,
+  "issues": [
+    {
+      "code": "WEAPON_TOO_SMALL",
+      "message": "hero shot 阶段枪械主体占比不足"
+    },
+    {
+      "code": "FIRE_PARTICLES_MISSING",
+      "message": "未检测到明显火元素粒子"
+    },
+    {
+      "code": "TEXT_OUT_OF_SAFE_AREA",
+      "message": "Available Now 过低，存在裁切风险"
+    },
+    {
+      "code": "ORBIT_NOT_VISIBLE",
+      "message": "camera preset 为 orbit，但画面角度变化不明显"
+    }
+  ]
+}
+```
+
+这个视觉验收器非常重要。它可以成为你产品工程化的关键亮点。
+
+---
+
+# 九、执行排期
+
+## Day 1：建立分析库和 schema
+
+任务：
+
+1. 新建 `reference_library/` 结构；
+2. 写 `tools/analyze_reference_videos.py`；
+3. 输出 `metadata.json`；
+4. 输出 `contact_sheet.jpg`；
+5. 输出 `color_profile.json`；
+6. 输出 `scene_changes.json`；
+7. 写 `docs/templates/template_grammar_spec.md`。
+
+验收：
+
+* 任意 mp4 能被分析；
+* 能生成 contact sheet；
+* 能生成基础 metadata；
+* 能生成目录结构。
+
+---
+
+## Day 2：完成人工标注和模板语法
+
+任务：
+
+1. 手动标注 2 条角色生日视频；
+2. 手动标注 1 条枪械皮肤视频；
+3. 为每条视频写 `timeline.json`；
+4. 写 `style_profile.json`；
+5. 写 `template_grammar.json`；
+6. 总结共性到：
+
+   * `weapon_skin_showcase_findings.md`
+   * `character_birthday_findings.md`
+
+验收：
+
+* 每条视频都能被拆成阶段；
+* 每个阶段都有元素、转场、文字、颜色、镜头字段；
+* 能看出哪些组件适合模板化。
+
+---
+
+## Day 3：实现 weapon_skin_showcase 语法到 Project JSON 的转换
+
+任务：
+
+1. 写 `tools/build_template_grammar.py`；
+2. 输入 `template_grammar.json`；
+3. 输出 CineAnchor Project JSON；
+4. 支持 `weapon_skin_showcase`；
+5. 支持 `fire` 主题；
+6. 支持 `small_angle_orbit` 和 `side_profile_dolly_in` 两种 camera preset。
+
+验收：
+
+* 能自动生成 `weapon_skin_showcase_project.json`；
+* JSON 里包含 timeline、text、style、camera；
+* 不破坏现有模板。
+
+---
+
+## Day 4：修 weapon_skin_showcase 模板表现
+
+任务：
+
+1. 实现 shadow reveal；
+2. 实现 orange rim light；
+3. 实现 light sweep；
+4. 实现 ember sparks；
+5. 修复文字安全区；
+6. 修复 CTA；
+7. 修复枪械主体占比；
+8. 如果 orbit 不明显，就先改成 `side_profile_dolly_in`。
+
+验收：
+
+* 输出不再像黑底模型预览；
+* 有明显火元素；
+* 有完整文案信息；
+* CTA 不裁切；
+* 枪械主体足够大。
+
+---
+
+## Day 5：做视觉验收器
+
+任务：
+
+1. 写 `tools/validate_generated_video.py`；
+2. 检查视频规格；
+3. 抽关键帧；
+4. 检查文字安全区；
+5. 检查主题色可见度；
+6. 检查枪械主体占比；
+7. 检查是否有阶段变化；
+8. 输出 JSON 报告。
+
+验收：
+
+* 对当前失败样片能指出：
+
+  * orbit 不明显；
+  * 火元素缺失；
+  * 文字越界；
+  * 主体偏小；
+* 对修复后样片能给更高分。
+
+---
+
+## Day 6–7：沉淀文档和 Codex 工作流
+
+任务：
+
+1. 写 `docs/templates/weapon_skin_showcase_template.md`；
+2. 写 `docs/reference_analysis/reference_video_analysis_method.md`；
+3. 写一条标准 Codex prompt；
+4. 整理 change report；
+5. 设计下一批模板：
+
+   * character_birthday；
+   * new_character_launch；
+   * skin_event_promo。
+
+验收：
+
+* 新人或 Codex 能按文档继续拆视频；
+* 新视频能按同样结构进入模板库；
+* 不再靠临时口头判断。
+
+---
+
+# 十、最小可执行版本
+
+如果你只想最快落地，先不要做太多。
+
+## MVP 只做这 5 件事
+
+1. `analyze_reference_videos.py`
+2. `timeline.json` 标注规范
+3. `template_grammar.json` 规范
+4. `weapon_skin_showcase` 的 12 秒时间轴
+5. `validate_generated_video.py`
+
+先不要做：
+
+* 自动 OCR；
+* 自动理解视频内容；
+* 训练模型；
+* 多模板复杂继承；
+* 高级 UI；
+* 全自动转模板。
+
+---
+
+# 十一、给 Codex 的执行提示词
+
+可以直接复制：
+
+```text
+你现在要为 CineAnchor 建立“参考视频 → 模板语法 → Project JSON → 渲染验收”的工作流。
+
+目标不是训练视频模型，而是把参考游戏宣传片拆解成结构化模板语法，用于 CineAnchor 的确定性视频生成。
+
+请按以下顺序执行：
+
+1. 新增 reference_library/ 目录结构，用于存放参考视频分析结果。
+2. 新增 tools/analyze_reference_videos.py：
+   - 输入 mp4；
+   - 输出 metadata.json；
+   - 输出 contact_sheet.jpg；
+   - 输出 scene_changes.json；
+   - 输出 color_profile.json；
+   - 输出 motion_profile.json；
+   - 输出 audio_profile.json。
+3. 新增 docs/templates/template_grammar_spec.md，定义模板语法：
+   - input_slots；
+   - timeline；
+   - stages；
+   - layers；
+   - transitions；
+   - text_styles；
+   - color_palette；
+   - particles；
+   - camera_presets；
+   - validation_rules。
+4. 新增 weapon_skin_showcase 的模板语法示例：
+   - 12s；
+   - 1080x1920；
+   - shadow_reveal；
+   - light_sweep；
+   - hero_showcase；
+   - element_burst；
+   - title_card；
+   - cta_end。
+5. 新增配置文件或文档：
+   - transition_presets；
+   - text_style_presets；
+   - color_theme_presets；
+   - particle_presets；
+   - camera_presets。
+6. 新增 tools/build_template_grammar.py：
+   - 输入 template_grammar.json；
+   - 输出 CineAnchor Project JSON；
+   - 首先支持 weapon_skin_showcase。
+7. 新增 tools/validate_generated_video.py：
+   - 检查时长；
+   - 检查分辨率；
+   - 检查画幅；
+   - 检查文字安全区；
+   - 检查主题色可见度；
+   - 检查枪械主体占比；
+   - 检查 fire particle preset 是否启用；
+   - 检查 camera preset 是否与实际运动一致。
+8. 不要接入 AI 视频生成。
+9. 不要重构现有 Web → FastAPI → Project JSON → Blender → FFmpeg 主链路。
+10. 不要把参考视频原样用于训练。
+11. 完成后输出 change report：
+   - 新增文件；
+   - 修改文件；
+   - 如何运行分析；
+   - 如何生成 Project JSON；
+   - 如何验证输出视频；
+   - 当前限制；
+   - 下一步建议。
+
+优先保证 weapon_skin_showcase 能从模板语法生成可执行 Project JSON，并能用 validate_generated_video.py 指出当前 final.mp4 的问题。
+```
+
+---
+
+# 十二、最终执行顺序
+
+最推荐你按这个顺序推进：
+
+```text
+1. 参考视频自动抽帧
+2. 人工标注时间轴
+3. 写模板语法 spec
+4. 拆出转场 / 字体 / 颜色 / 粒子 / 镜头库
+5. 生成 weapon_skin_showcase Project JSON
+6. 修模板表现
+7. 做视觉验收器
+8. 再扩展 character_birthday
+9. 最后考虑 AI 增强
+```
+
+现在最关键的不是继续做更多模板，而是先把**模板分析方法标准化**。
+
+一句话总结：
+
+> 你要建立的不是“视频训练库”，而是“游戏运营视频模板语法库”。
+> 每条参考视频最终都应该变成一份 timeline.json、style_profile.json、template_grammar.json 和一套可执行的 Project JSON。
