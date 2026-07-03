@@ -7,7 +7,9 @@ Status: Accepted (retroactively documented).
 
 ## Context
 
-CineAnchor Neo generates vertical (9:16) game-promo / game-operations videos. Before any tech or architecture choice, the founding product question was *who is this for and what is it*. Two forks were available:
+CineAnchor Neo generates vertical (9:16) game-promo / game-operations videos. The founding decision — made *before* any tech, architecture, or quality bar existed — was **who is this for**. Target-customer selection is the first move; the project (its four criteria, its stack, its constraints) is then built to serve that customer. The causal arrow runs **customer → project**, never the reverse.
+
+Two forks were available:
 
 - **toC consumer** — a video toy/app for individual players (AI effects, meme/novelty clips, one-tap "make it cinematic").
 - **toB game-operations** — a production tool for game marketing/ops teams that must ship on-brand promo material on a cadence (new skin, new character, event, patch).
@@ -23,17 +25,27 @@ CineAnchor is positioned as a **controllable, template/JSON-driven game-ops (toB
 
 ## Why game-ops and NOT toC
 
-The choice is forced by the product's own quality bar and design, not a market whim:
+These are the reasons that stood **at inception — before the project had any technical characteristics**. They are grounded in market, buyer need, and solo-dev strategy alone. They are *prior to* and *cause* the quality bar; they are not derived from it.
 
-1. **The four hard criteria demand a market that requires correctness.** Our bar is controllable / no-distortion / logical / frame-to-frame consistent (ADR-005). toC video toys tolerate distortion and randomness because their value is novelty, fun, and virality. Game-ops material cannot: a warped weapon skin or a wrong character face is unusable as official marketing. The deterministic-over-generative bet only pays off where correctness is mandatory — that is game-ops, not toC.
-2. **Template-fill fits a repeatable operational need, not a consumer one.** Ops teams produce many promo videos on a cadence and need fast, stable, on-brand, reproducible output from structured inputs (asset + copy + theme color). toC users want either full creative freedom (→ a free editor, which we reject) or one-tap generative novelty (→ AI that breaks the criteria). Our design serves neither consumer mode — it is intrinsically an ops production tool.
-3. **Reproducibility + versioning is a feature for ops, invisible to toC.** Seeded, versioned, re-renderable output (competitive-analysis tripwire T3) lets ops tweak-and-re-render and maintain a consistent series look. Consumers don't value this.
-4. **The asset premise presupposes a professional user.** The pipeline requires real game assets — pre-matted transparent PNG / GLB (V0.2 §4.3). Game-ops teams have these production assets; toC consumers do not.
-5. **Focus and defensibility for a solo dev.** toC is crowded, low-ARPU, virality- and CAC-dependent, and distribution-hard for one developer. Game-ops is a focused, reachable, higher-willingness-to-pay wedge where the moat (a controllable deterministic engine) is exactly what the buyer needs.
+1. **Market defensibility and reachability for a solo dev.** toC video is crowded, low-ARPU, virality- and CAC-dependent, and distribution-hard for one person. toB game-ops is a focused, reachable wedge with a nameable buyer, real budget, and higher willingness to pay — a go-to-market a single developer can actually serve.
+2. **A real, repeatable operational need to build a product around.** Game marketing/ops teams must ship on-brand promo material on a cadence (new skin / character / event / patch). That recurring, structured demand is a durable business to serve; toC's "make me a fun clip" is an occasional, unstructured want with no cadence to anchor a product.
+3. **A defined buyer with a clear value exchange.** An ops buyer has an explicit pain (produce many on-brand videos fast and reproducibly) and pays to remove it, so value can be captured *without* mass-market scale. toC monetizes only at distribution scale a solo dev cannot fund.
+4. **Portfolio-first founding fit.** V0.1's goal was the fastest path to a portfolio-ready demo of *controllable quality*. A focused toB use-case with a demanding buyer showcases engineering depth far better than one more entry in the crowded toC toy category.
+
+## Why the project follows the customer — not the reverse
+
+Having chosen game-ops as the buyer, that choice **imposes** the project's defining characteristics. These are *consequences* of the positioning, not independent reasons for it — listing them as reasons to pick the customer would be circular, because they exist only because the customer was already chosen:
+
+- The buyer's material must be brand-safe → the **four hard criteria** (controllable / no-distortion / logical / frame-to-frame consistent, ADR-005): a warped weapon skin or a wrong character face is unusable as official marketing.
+- The four criteria → the **deterministic-over-generative bet** (ADR-005) and the **core tech stack** (ADR-002).
+- The reproducible-cadence need → **Project JSON as single source of truth + seeded, versioned re-render** (ADR-003).
+- A professional buyer already owns production assets → the **pre-matted transparent PNG / GLB** input premise.
+
+The arrow is customer → four criteria → deterministic engine → stack/JSON/asset premise. These downstream properties **reinforce and stay consistent with** the choice, but they did not motivate it.
 
 ## Consequences
 
 - Every downstream decision optimizes for controllability/reproducibility over creative freedom or generative novelty (grounds ADR-002 stack, ADR-003 JSON-single-truth, ADR-005 deterministic route).
 - Features that only make sense for toC (one-tap AI restyle, meme effects, free editing) are out of scope; features that serve ops (templates, theme-color drive, versioned re-render, brand-safe determinism) are in.
 - The product story is "a controllable game-promo video generator for ops," told by the deterministic pipeline itself.
-- Re-open this ADR only if the target buyer changes; a toC pivot would invalidate the four-criteria bet and much of ADR-002/003/005.
+- Re-open this ADR only if the **target buyer** changes; a toC pivot would invalidate the four-criteria bet and much of ADR-002/003/005. (Consistent with the customer→project direction: change the customer, and the project's characteristics must be re-derived.)
